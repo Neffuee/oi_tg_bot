@@ -3,100 +3,442 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Debug Bot Settings</title>
+    <title>Настройки Бота - Open Interest Monitor</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body {
-            background-color: #111;
-            color: white;
-            font-family: sans-serif;
-            padding: 20px;
-            text-align: center;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
-        button {
-            width: 100%;
+        
+        body {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
             padding: 20px;
-            background: #2ecc71;
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #4fc3f7;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        .status-active {
+            background-color: #2ecc71;
+            color: #000;
+        }
+        
+        .status-inactive {
+            background-color: #e74c3c;
+            color: #fff;
+        }
+        
+        .settings-group {
+            background-color: #2d2d2d;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .settings-group h2 {
+            color: #81c784;
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .settings-group h2::before {
+            content: "⚙️";
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #bbbbbb;
+            font-size: 14px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            background-color: #3d3d3d;
+            border: 2px solid #444;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #4fc3f7;
+        }
+        
+        select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23ffffff' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 12px;
+            padding-right: 40px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: #4fc3f7;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 16px 20px;
             border: none;
             border-radius: 10px;
-            font-size: 20px;
+            font-size: 16px;
             font-weight: bold;
-            color: black;
             cursor: pointer;
-            margin-top: 20px;
+            transition: all 0.3s;
+            text-align: center;
         }
-        input { margin: 10px 0; width: 100%; padding: 10px; box-sizing: border-box;}
-        .log { color: yellow; font-size: 12px; text-align: left; margin-top: 20px; }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #4fc3f7, #2196f3);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background-color: #555;
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .log-box {
+            background-color: #000;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 3px 0;
+            border-bottom: 1px solid #222;
+        }
+        
+        .debug-toggle {
+            text-align: center;
+            margin-top: 15px;
+        }
+        
+        .debug-toggle button {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 12px;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        
+        .current-values {
+            background-color: #2d2d2d;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .current-values h3 {
+            color: #ff9800;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .param-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #3d3d3d;
+        }
+        
+        .param-label {
+            color: #bbb;
+        }
+        
+        .param-value {
+            color: #4fc3f7;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
-
-    <h2>🛠 Debug Mode</h2>
-    
-    <label>Тест OI (%):</label>
-    <input type="number" id="oi" value="5">
-
-    <label>Тест Volume (%):</label>
-    <input type="number" id="vol" value="20">
-
-    <button id="btn" onclick="saveData()">🚀 ОТПРАВИТЬ ДАННЫЕ</button>
-
-    <div id="log" class="log">Логи будут здесь...</div>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ Настройки мониторинга</h1>
+            <p>Настройте параметры отслеживания Open Interest</p>
+            <div id="status" class="status-indicator status-active">✅ Активен</div>
+        </div>
+        
+        <div class="current-values">
+            <h3>📊 Текущие параметры:</h3>
+            <div class="param-row">
+                <span class="param-label">OI Порог:</span>
+                <span id="current-oi" class="param-value">5%</span>
+            </div>
+            <div class="param-row">
+                <span class="param-label">Volume Порог:</span>
+                <span id="current-vol" class="param-value">20%</span>
+            </div>
+            <div class="param-row">
+                <span class="param-label">Период:</span>
+                <span id="current-period" class="param-value">1 час</span>
+            </div>
+            <div class="param-row">
+                <span class="param-label">Фильтр пар:</span>
+                <span id="current-filter" class="param-value">Все пары</span>
+            </div>
+        </div>
+        
+        <div class="settings-group">
+            <h2>Основные настройки</h2>
+            
+            <div class="checkbox-group">
+                <input type="checkbox" id="active" checked>
+                <label for="active">Активный мониторинг</label>
+            </div>
+            
+            <div class="form-group">
+                <label for="oi">Порог изменения Open Interest (%)</label>
+                <input type="number" id="oi" class="form-control" min="0.1" max="100" step="0.1" value="5.0">
+            </div>
+            
+            <div class="form-group">
+                <label for="vol">Порог изменения Volume (%)</label>
+                <input type="number" id="vol" class="form-control" min="0.1" max="100" step="0.1" value="20.0">
+            </div>
+        </div>
+        
+        <div class="settings-group">
+            <h2>Дополнительные параметры</h2>
+            
+            <div class="form-group">
+                <label for="period">Период сравнения</label>
+                <select id="period" class="form-control">
+                    <option value="1m">1 минута</option>
+                    <option value="5m">5 минут</option>
+                    <option value="15m">15 минут</option>
+                    <option value="30m">30 минут</option>
+                    <option value="1h" selected>1 час</option>
+                    <option value="4h">4 часа</option>
+                    <option value="1d">1 день</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="filter">Фильтр торговых пар</label>
+                <select id="filter" class="form-control">
+                    <option value="all" selected>Все пары</option>
+                    <option value="top50">Топ-50 по объёму</option>
+                    <option value="custom">Пользовательские пары</option>
+                </select>
+            </div>
+            
+            <div class="form-group" id="custom-pairs-group" style="display: none;">
+                <label for="custom">Пользовательские пары (через запятую)</label>
+                <input type="text" id="custom" class="form-control" placeholder="BTCUSDT, ETHUSDT, SOLUSDT">
+                <small style="color: #888; font-size: 12px; margin-top: 5px; display: block;">
+                    Укажите торговые пары через запятую. Пример: BTCUSDT, ETHUSDT, SOLUSDT
+                </small>
+            </div>
+        </div>
+        
+        <div class="button-group">
+            <button class="btn btn-secondary" onclick="loadCurrentSettings()">🔄 Загрузить текущие</button>
+            <button class="btn btn-primary" onclick="saveAndSend()">💾 Сохранить и отправить</button>
+        </div>
+        
+        <div class="debug-toggle">
+            <button onclick="toggleDebug()">Показать/скрыть логи</button>
+        </div>
+        
+        <div id="log-box" class="log-box">
+            <div id="log-content"></div>
+        </div>
+    </div>
 
     <script>
         let tg = window.Telegram.WebApp;
+        
+        // Инициализация
         tg.expand();
-
-        function log(text) {
-            document.getElementById('log').innerHTML += "<br>> " + text;
+        tg.enableClosingConfirmation();
+        
+        // Элементы DOM
+        const logBox = document.getElementById('log-box');
+        const logContent = document.getElementById('log-content');
+        const customPairsGroup = document.getElementById('custom-pairs-group');
+        const filterSelect = document.getElementById('filter');
+        
+        // Логирование
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const typeEmoji = type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️';
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `${typeEmoji} [${timestamp}] ${message}`;
+            logContent.appendChild(logEntry);
+            logBox.scrollTop = logBox.scrollHeight;
         }
-
-        // Проверка инициализации
-        log("WebApp Version: " + tg.version);
-        log("Platform: " + tg.platform);
-
-        function saveData() {
-            try {
-                // 1. Проверяем кнопку
-                alert("1. Кнопка нажата! Начинаем сбор данных...");
-                log("Click registered");
-
-                // 2. Собираем данные
-                let oiVal = document.getElementById('oi').value;
-                let volVal = document.getElementById('vol').value;
-
-                let data = {
-                    active: true,
-                    oi: parseFloat(oiVal),
-                    vol: parseFloat(volVal),
-                    period: "1h",
-                    filter: "all",
-                    custom: ""
-                };
-
-                let jsonString = JSON.stringify(data);
-                alert("2. Данные собраны: " + jsonString);
-                log("Data prepared: " + jsonString);
-
-                // 3. Пытаемся отправить
-                if (tg.sendData) {
-                    alert("3. Отправляю tg.sendData()...");
-                    tg.sendData(jsonString);
-                    log("sendData called");
-                    
-                    // 4. Закрываем
-                    setTimeout(function(){
-                         tg.close();
-                    }, 500); 
-                } else {
-                    alert("❌ ОШИБКА: tg.sendData не найдена! Вы открыли сайт не через кнопку бота?");
-                }
-
-            } catch (e) {
-                alert("❌ КРИТИЧЕСКАЯ ОШИБКА JS: " + e.message);
-                log("Error: " + e.message);
+        
+        // Показать/скрыть логи
+        function toggleDebug() {
+            logBox.style.display = logBox.style.display === 'block' ? 'none' : 'block';
+        }
+        
+        // Загрузка текущих параметров из URL
+        function loadCurrentSettings() {
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            // Основные настройки
+            const active = urlParams.get('active') === 'true';
+            const oi = urlParams.get('oi') || '5.0';
+            const vol = urlParams.get('vol') || '20.0';
+            const period = urlParams.get('period') || '1h';
+            const filter = urlParams.get('filter') || 'all';
+            const custom = urlParams.get('custom') || '';
+            
+            // Применяем значения
+            document.getElementById('active').checked = active;
+            document.getElementById('oi').value = oi;
+            document.getElementById('vol').value = vol;
+            document.getElementById('period').value = period;
+            document.getElementById('filter').value = filter;
+            document.getElementById('custom').value = custom;
+            
+            // Обновляем отображение
+            updateCurrentValues();
+            updateFilterDisplay();
+            
+            log('Настройки загружены из URL');
+        }
+        
+        // Обновление отображаемых текущих значений
+        function updateCurrentValues() {
+            document.getElementById('current-oi').textContent = document.getElementById('oi').value + '%';
+            document.getElementById('current-vol').textContent = document.getElementById('vol').value + '%';
+            
+            const periodMap = {
+                '1m': '1 минута',
+                '5m': '5 минут',
+                '15m': '15 минут',
+                '30m': '30 минут',
+                '1h': '1 час',
+                '4h': '4 часа',
+                '1d': '1 день'
+            };
+            document.getElementById('current-period').textContent = 
+                periodMap[document.getElementById('period').value] || '1 час';
+            
+            const filterMap = {
+                'all': 'Все пары',
+                'top50': 'Топ-50',
+                'custom': 'Пользовательские'
+            };
+            document.getElementById('current-filter').textContent = 
+                filterMap[document.getElementById('filter').value] || 'Все пары';
+            
+            const statusElement = document.getElementById('status');
+            if (document.getElementById('active').checked) {
+                statusElement.textContent = '✅ Активен';
+                statusElement.className = 'status-indicator status-active';
+            } else {
+                statusElement.textContent = '⏸ На паузе';
+                statusElement.className = 'status-indicator status-inactive';
             }
         }
-    </script>
-</body>
-</html>
+        
+        // Обновление отображения фильтра
+        function updateFilterDisplay() {
+            if (filterSelect.value === 'custom') {
+                customPairsGroup.style.display = 'block';
+            } else {
+                customPairsGroup.style.display = 'none';
+            }
+        }
+        
+        // Сохранение и отправка данных
+        function saveAndSend() {
+            try {
+                log('Начало отправки данных...');
+                
+                // Сбор данных
+                const data = {
+                    active: document.getElementById('active').checked,
+                    oi: parseFloat(document.getElementById('oi').value),
+                    vol: parseFloat(document.getElementById('vol').value),
+                    period: document.getElementById('period').value,
+                    filter: document.getElementById('filter').value,
+                    custom: document.getElementById('custom').value.trim()
+                };
+                
+                // Валидация
+                if (isNaN(data.oi) || data.oi <= 0
