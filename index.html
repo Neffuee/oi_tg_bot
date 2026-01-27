@@ -6,91 +6,43 @@
     <title>Настройки бота</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-            background: #f5f5f5;
-        }
-        .container {
-            max-width: 500px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        input, select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 16px;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 20px;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-        .status {
-            text-align: center;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-        }
-        .success {
-            background: #d4edda;
-            color: #155724;
-        }
-        .error {
-            background: #f8d7da;
-            color: #721c24;
-        }
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; margin: 0; }
+        .container { max-width: 400px; margin: 0 auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; margin-bottom: 25px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
+        input, select { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; transition: border-color 0.3s; }
+        input:focus, select:focus { outline: none; border-color: #007bff; }
+        .checkbox-group { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+        .checkbox-group input { width: 20px; height: 20px; }
+        button { width: 100%; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: 600; cursor: pointer; margin-top: 10px; transition: transform 0.2s, box-shadow 0.2s; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08); }
+        .status { padding: 12px; margin: 15px 0; border-radius: 8px; text-align: center; display: none; font-weight: bold; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .debug-info { background: #e9ecef; padding: 10px; border-radius: 5px; font-size: 12px; color: #666; margin-top: 20px; display: none; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>⚙️ Настройки бота</h1>
-        
-        <div id="status" class="status" style="display: none;"></div>
-        
-        <div class="form-group">
-            <label>
-                <input type="checkbox" id="active" checked>
-                Активный мониторинг
-            </label>
+        <div id="status" class="status"></div>
+
+        <div class="checkbox-group">
+            <input type="checkbox" id="active" checked>
+            <label for="active">✅ Активный мониторинг</label>
         </div>
-        
+
         <div class="form-group">
             <label for="oi">Порог OI (%)</label>
             <input type="number" id="oi" value="5.0" min="0.1" step="0.1">
         </div>
-        
+
         <div class="form-group">
             <label for="vol">Порог Volume (%)</label>
             <input type="number" id="vol" value="20.0" min="0.1" step="0.1">
         </div>
-        
+
         <div class="form-group">
             <label for="period">Период сравнения</label>
             <select id="period">
@@ -103,7 +55,7 @@
                 <option value="1d">1 день</option>
             </select>
         </div>
-        
+
         <div class="form-group">
             <label for="filter">Фильтр пар</label>
             <select id="filter">
@@ -112,69 +64,67 @@
                 <option value="custom">Custom</option>
             </select>
         </div>
-        
+
         <div class="form-group" id="customGroup" style="display: none;">
             <label for="custom">Custom пары (через запятую)</label>
-            <input type="text" id="custom" placeholder="BTCUSDT, ETHUSDT">
+            <input type="text" id="custom" placeholder="BTCUSDT, ETHUSDT, SOLUSDT">
         </div>
-        
+
         <button onclick="sendData()">💾 Сохранить настройки</button>
+
+        <div class="debug-info" id="debugInfo">
+            <strong>Отладка:</strong><br>
+            <div id="debugLog"></div>
+        </div>
     </div>
 
     <script>
-        // Инициализация Telegram Web App
+        // Telegram Web App API
         const tg = window.Telegram.WebApp;
-        tg.expand();
-        
-        // Элементы DOM
+        tg.expand(); // Открыть на весь экран
+        tg.enableClosingConfirmation(); // Подтверждение закрытия
+
+        // Элементы страницы
         const statusDiv = document.getElementById('status');
+        const debugInfo = document.getElementById('debugInfo');
+        const debugLog = document.getElementById('debugLog');
         const filterSelect = document.getElementById('filter');
         const customGroup = document.getElementById('customGroup');
-        
-        // Показать статус
-        function showStatus(message, type) {
+
+        // Функция для логирования в отладочную панель
+        function logToDebug(message) {
+            const time = new Date().toLocaleTimeString();
+            debugLog.innerHTML += `[${time}] ${message}<br>`;
+            console.log(message); // Также в консоль браузера
+        }
+
+        // Показать статусное сообщение
+        function showStatus(message, type = 'success') {
             statusDiv.textContent = message;
             statusDiv.className = `status ${type}`;
             statusDiv.style.display = 'block';
-            setTimeout(() => {
-                statusDiv.style.display = 'none';
-            }, 3000);
+            logToDebug(`Статус: ${message}`);
+            setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
         }
-        
-        // Обновить видимость поля custom
-        function updateCustomGroup() {
-            if (filterSelect.value === 'custom') {
-                customGroup.style.display = 'block';
-            } else {
-                customGroup.style.display = 'none';
-            }
+
+        // Загрузить параметры из URL (например, ?oi=10&vol=50)
+        function loadSettingsFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            document.getElementById('active').checked = params.get('active') === 'true';
+            document.getElementById('oi').value = params.get('oi') || '5.0';
+            document.getElementById('vol').value = params.get('vol') || '20.0';
+            document.getElementById('period').value = params.get('period') || '1h';
+            document.getElementById('filter').value = params.get('filter') || 'all';
+            document.getElementById('custom').value = params.get('custom') || '';
+
+            customGroup.style.display = filterSelect.value === 'custom' ? 'block' : 'none';
+            logToDebug('Настройки загружены из URL');
         }
-        
-        // Загрузить настройки из URL
-        function loadFromURL() {
-            const urlParams = new URLSearchParams(window.location.search);
-            
-            const active = urlParams.get('active') === 'true';
-            const oi = urlParams.get('oi') || '5.0';
-            const vol = urlParams.get('vol') || '20.0';
-            const period = urlParams.get('period') || '1h';
-            const filter = urlParams.get('filter') || 'all';
-            const custom = urlParams.get('custom') || '';
-            
-            document.getElementById('active').checked = active;
-            document.getElementById('oi').value = oi;
-            document.getElementById('vol').value = vol;
-            document.getElementById('period').value = period;
-            document.getElementById('filter').value = filter;
-            document.getElementById('custom').value = custom;
-            
-            updateCustomGroup();
-        }
-        
-        // Отправить данные в бот
+
+        // Отправка данных в бота — ГЛАВНАЯ ФУНКЦИЯ
         function sendData() {
             try {
-                // Собираем данные
+                // 1. Собираем данные с формы
                 const data = {
                     active: document.getElementById('active').checked,
                     oi: parseFloat(document.getElementById('oi').value),
@@ -183,49 +133,57 @@
                     filter: document.getElementById('filter').value,
                     custom: document.getElementById('custom').value.trim()
                 };
-                
-                console.log('Данные для отправки:', data);
-                
-                // Проверяем данные
+
+                logToDebug(`Собраны данные: ${JSON.stringify(data)}`);
+
+                // 2. Проверяем, что значения корректны
                 if (isNaN(data.oi) || data.oi <= 0) {
-                    showStatus('Ошибка: неверный порог OI', 'error');
+                    showStatus('Ошибка: введите корректный порог OI', 'error');
                     return;
                 }
-                
                 if (isNaN(data.vol) || data.vol <= 0) {
-                    showStatus('Ошибка: неверный порог Volume', 'error');
+                    showStatus('Ошибка: введите корректный порог Volume', 'error');
                     return;
                 }
-                
-                // Отправляем данные через Telegram Web App
-                if (tg.sendData) {
-                    console.log('Отправляем данные через tg.sendData');
-                    tg.sendData(JSON.stringify(data));
-                    showStatus('Данные отправлены!', 'success');
-                    
-                    // Закрываем WebApp через 1 секунду
-                    setTimeout(() => {
-                        tg.close();
-                    }, 1000);
-                    
-                } else {
-                    console.error('tg.sendData не доступен!');
-                    showStatus('Ошибка: открыто не в Telegram', 'error');
+
+                // 3. Проверяем доступность API Telegram Web App
+                if (typeof tg.sendData !== 'function') {
+                    logToDebug('ОШИБКА: tg.sendData не является функцией. Открыто не через Telegram?');
+                    showStatus('Ошибка: откройте страницу через бота в Telegram', 'error');
+                    return;
                 }
-                
+
+                // 4. Преобразуем данные в строку и отправляем
+                const dataString = JSON.stringify(data);
+                logToDebug(`Отправляем строку: ${dataString}`);
+
+                tg.sendData(dataString); // Ключевой вызов API Telegram
+                showStatus('✅ Настройки отправлены в бота!');
+
+                // 5. Закрываем мини-приложение через секунду
+                setTimeout(() => { tg.close(); }, 1000);
+
             } catch (error) {
-                console.error('Ошибка:', error);
-                showStatus(`Ошибка: ${error.message}`, 'error');
+                logToDebug(`Критическая ошибка: ${error.message}`);
+                showStatus(`Ошибка отправки: ${error.message}`, 'error');
             }
         }
-        
-        // Слушатель изменения фильтра
-        filterSelect.addEventListener('change', updateCustomGroup);
-        
-        // Автозагрузка при открытии
+
+        // Инициализация при загрузке страницы
         window.addEventListener('load', () => {
-            console.log('WebApp загружен');
-            loadFromURL();
+            console.log('🚀 Telegram WebApp инициализирован. Платформа:', tg.platform);
+            logToDebug(`Версия WebApp: ${tg.version}`);
+
+            // Показываем отладочную информацию (можно скрыть потом)
+            debugInfo.style.display = 'block';
+
+            // Загружаем начальные настройки из URL
+            loadSettingsFromURL();
+
+            // Обработчик изменения фильтра (показ/скрытие поля для custom пар)
+            filterSelect.addEventListener('change', function() {
+                customGroup.style.display = this.value === 'custom' ? 'block' : 'none';
+            });
         });
     </script>
 </body>
