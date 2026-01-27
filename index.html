@@ -3,129 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Настройки Бота - Open Interest Monitor</title>
+    <title>Настройки Бота</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
         }
         
         body {
-            background-color: #1a1a1a;
-            color: #ffffff;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            line-height: 1.5;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         
         .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
             max-width: 500px;
-            margin: 0 auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
         
-        .header {
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #666;
             text-align: center;
             margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #333;
-        }
-        
-        .header h1 {
-            font-size: 24px;
-            margin-bottom: 10px;
-            color: #4fc3f7;
-        }
-        
-        .status-indicator {
-            display: inline-block;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: bold;
-            margin-top: 10px;
-        }
-        
-        .status-active {
-            background-color: #2ecc71;
-            color: #000;
-        }
-        
-        .status-inactive {
-            background-color: #e74c3c;
-            color: #fff;
-        }
-        
-        .settings-group {
-            background-color: #2d2d2d;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        
-        .settings-group h2 {
-            color: #81c784;
-            font-size: 18px;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .settings-group h2::before {
-            content: "⚙️";
+            font-size: 16px;
         }
         
         .form-group {
             margin-bottom: 20px;
         }
         
-        .form-group label {
+        label {
             display: block;
             margin-bottom: 8px;
-            color: #bbbbbb;
-            font-size: 14px;
+            color: #555;
+            font-weight: 500;
         }
         
-        .form-control {
+        input, select {
             width: 100%;
             padding: 12px 15px;
-            background-color: #3d3d3d;
-            border: 2px solid #444;
-            border-radius: 8px;
-            color: #ffffff;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
             font-size: 16px;
             transition: border-color 0.3s;
         }
         
-        .form-control:focus {
+        input:focus, select:focus {
             outline: none;
-            border-color: #4fc3f7;
-        }
-        
-        select.form-control {
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23ffffff' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 15px center;
-            background-size: 12px;
-            padding-right: 40px;
+            border-color: #667eea;
         }
         
         .checkbox-group {
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
         
-        .checkbox-group input[type="checkbox"] {
+        .checkbox-group input {
             width: 20px;
             height: 20px;
-            accent-color: #4fc3f7;
         }
         
         .button-group {
@@ -134,54 +88,40 @@
             margin-top: 30px;
         }
         
-        .btn {
+        button {
             flex: 1;
-            padding: 16px 20px;
+            padding: 16px;
             border: none;
             border-radius: 10px;
             font-size: 16px;
-            font-weight: bold;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
-            text-align: center;
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, #4fc3f7, #2196f3);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
         
         .btn-secondary {
-            background-color: #555;
-            color: white;
+            background: #f0f0f0;
+            color: #333;
         }
         
-        .btn:hover {
+        button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
         
-        .btn:active {
-            transform: translateY(0);
-        }
-        
-        .log-box {
-            background-color: #000;
-            color: #0f0;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
+        .debug-info {
+            background: #f8f9fa;
+            border-radius: 10px;
             padding: 15px;
-            border-radius: 8px;
             margin-top: 20px;
-            max-height: 200px;
-            overflow-y: auto;
+            font-size: 12px;
+            color: #666;
             display: none;
-        }
-        
-        .log-entry {
-            margin-bottom: 5px;
-            padding: 3px 0;
-            border-bottom: 1px solid #222;
         }
         
         .debug-toggle {
@@ -192,173 +132,138 @@
         .debug-toggle button {
             background: none;
             border: none;
-            color: #888;
-            font-size: 12px;
-            cursor: pointer;
+            color: #667eea;
             text-decoration: underline;
-        }
-        
-        .current-values {
-            background-color: #2d2d2d;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
             font-size: 14px;
+            padding: 5px;
         }
         
-        .current-values h3 {
-            color: #ff9800;
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-        
-        .param-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 5px;
-            padding-bottom: 5px;
-            border-bottom: 1px solid #3d3d3d;
-        }
-        
-        .param-label {
-            color: #bbb;
-        }
-        
-        .param-value {
-            color: #4fc3f7;
+        .status {
+            text-align: center;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 10px;
             font-weight: bold;
+        }
+        
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>⚡ Настройки мониторинга</h1>
-            <p>Настройте параметры отслеживания Open Interest</p>
-            <div id="status" class="status-indicator status-active">✅ Активен</div>
-        </div>
+        <h1>⚙️ Настройки бота</h1>
+        <p class="subtitle">Настройте параметры отслеживания Open Interest</p>
         
-        <div class="current-values">
-            <h3>📊 Текущие параметры:</h3>
-            <div class="param-row">
-                <span class="param-label">OI Порог:</span>
-                <span id="current-oi" class="param-value">5%</span>
-            </div>
-            <div class="param-row">
-                <span class="param-label">Volume Порог:</span>
-                <span id="current-vol" class="param-value">20%</span>
-            </div>
-            <div class="param-row">
-                <span class="param-label">Период:</span>
-                <span id="current-period" class="param-value">1 час</span>
-            </div>
-            <div class="param-row">
-                <span class="param-label">Фильтр пар:</span>
-                <span id="current-filter" class="param-value">Все пары</span>
-            </div>
-        </div>
+        <div id="status" class="status" style="display: none;"></div>
         
-        <div class="settings-group">
-            <h2>Основные настройки</h2>
-            
+        <div class="form-group">
             <div class="checkbox-group">
                 <input type="checkbox" id="active" checked>
                 <label for="active">Активный мониторинг</label>
             </div>
-            
-            <div class="form-group">
-                <label for="oi">Порог изменения Open Interest (%)</label>
-                <input type="number" id="oi" class="form-control" min="0.1" max="100" step="0.1" value="5.0">
-            </div>
-            
-            <div class="form-group">
-                <label for="vol">Порог изменения Volume (%)</label>
-                <input type="number" id="vol" class="form-control" min="0.1" max="100" step="0.1" value="20.0">
-            </div>
         </div>
         
-        <div class="settings-group">
-            <h2>Дополнительные параметры</h2>
-            
-            <div class="form-group">
-                <label for="period">Период сравнения</label>
-                <select id="period" class="form-control">
-                    <option value="1m">1 минута</option>
-                    <option value="5m">5 минут</option>
-                    <option value="15m">15 минут</option>
-                    <option value="30m">30 минут</option>
-                    <option value="1h" selected>1 час</option>
-                    <option value="4h">4 часа</option>
-                    <option value="1d">1 день</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="filter">Фильтр торговых пар</label>
-                <select id="filter" class="form-control">
-                    <option value="all" selected>Все пары</option>
-                    <option value="top50">Топ-50 по объёму</option>
-                    <option value="custom">Пользовательские пары</option>
-                </select>
-            </div>
-            
-            <div class="form-group" id="custom-pairs-group" style="display: none;">
-                <label for="custom">Пользовательские пары (через запятую)</label>
-                <input type="text" id="custom" class="form-control" placeholder="BTCUSDT, ETHUSDT, SOLUSDT">
-                <small style="color: #888; font-size: 12px; margin-top: 5px; display: block;">
-                    Укажите торговые пары через запятую. Пример: BTCUSDT, ETHUSDT, SOLUSDT
-                </small>
-            </div>
+        <div class="form-group">
+            <label for="oi">Порог Open Interest (%)</label>
+            <input type="number" id="oi" min="0.1" max="100" step="0.1" value="5.0">
+        </div>
+        
+        <div class="form-group">
+            <label for="vol">Порог Volume (%)</label>
+            <input type="number" id="vol" min="0.1" max="100" step="0.1" value="20.0">
+        </div>
+        
+        <div class="form-group">
+            <label for="period">Период сравнения</label>
+            <select id="period">
+                <option value="1m">1 минута</option>
+                <option value="5m">5 минут</option>
+                <option value="15m">15 минут</option>
+                <option value="30m">30 минут</option>
+                <option value="1h" selected>1 час</option>
+                <option value="4h">4 часа</option>
+                <option value="1d">1 день</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="filter">Фильтр пар</label>
+            <select id="filter">
+                <option value="all" selected>Все пары</option>
+                <option value="top50">Топ-50</option>
+                <option value="custom">Custom</option>
+            </select>
+        </div>
+        
+        <div class="form-group" id="customGroup" style="display: none;">
+            <label for="custom">Custom пары (через запятую)</label>
+            <input type="text" id="custom" placeholder="BTCUSDT, ETHUSDT, SOLUSDT">
         </div>
         
         <div class="button-group">
-            <button class="btn btn-secondary" onclick="loadCurrentSettings()">🔄 Загрузить текущие</button>
-            <button class="btn btn-primary" onclick="saveAndSend()">💾 Сохранить и отправить</button>
+            <button class="btn-secondary" onclick="loadFromURL()">Загрузить</button>
+            <button class="btn-primary" onclick="sendData()">Сохранить</button>
         </div>
         
         <div class="debug-toggle">
-            <button onclick="toggleDebug()">Показать/скрыть логи</button>
+            <button onclick="toggleDebug()">Показать отладку</button>
         </div>
         
-        <div id="log-box" class="log-box">
-            <div id="log-content"></div>
+        <div id="debugInfo" class="debug-info">
+            <h4>Отладочная информация:</h4>
+            <div id="debugLog"></div>
         </div>
     </div>
 
     <script>
-        let tg = window.Telegram.WebApp;
+        // Инициализация Telegram Web App
+        const tg = window.Telegram.WebApp;
         
-        // Инициализация
+        // Развернуть на весь экран
         tg.expand();
         tg.enableClosingConfirmation();
         
         // Элементы DOM
-        const logBox = document.getElementById('log-box');
-        const logContent = document.getElementById('log-content');
-        const customPairsGroup = document.getElementById('custom-pairs-group');
+        const statusDiv = document.getElementById('status');
+        const debugInfo = document.getElementById('debugInfo');
+        const debugLog = document.getElementById('debugLog');
         const filterSelect = document.getElementById('filter');
+        const customGroup = document.getElementById('customGroup');
         
         // Логирование
-        function log(message, type = 'info') {
-            const timestamp = new Date().toLocaleTimeString();
-            const typeEmoji = type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️';
-            const logEntry = document.createElement('div');
-            logEntry.className = 'log-entry';
-            logEntry.innerHTML = `${typeEmoji} [${timestamp}] ${message}`;
-            logContent.appendChild(logEntry);
-            logBox.scrollTop = logBox.scrollHeight;
+        function log(message) {
+            const time = new Date().toLocaleTimeString();
+            debugLog.innerHTML += `[${time}] ${message}<br>`;
+            console.log(message);
         }
         
-        // Показать/скрыть логи
+        // Показать статус
+        function showStatus(message, type = 'success') {
+            statusDiv.textContent = message;
+            statusDiv.className = `status status-${type}`;
+            statusDiv.style.display = 'block';
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 3000);
+        }
+        
+        // Показать/скрыть отладку
         function toggleDebug() {
-            logBox.style.display = logBox.style.display === 'block' ? 'none' : 'block';
+            debugInfo.style.display = debugInfo.style.display === 'block' ? 'none' : 'block';
         }
         
-        // Загрузка текущих параметров из URL
-        function loadCurrentSettings() {
+        // Загрузить настройки из URL
+        function loadFromURL() {
             const urlParams = new URLSearchParams(window.location.search);
             
-            // Основные настройки
             const active = urlParams.get('active') === 'true';
             const oi = urlParams.get('oi') || '5.0';
             const vol = urlParams.get('vol') || '20.0';
@@ -366,7 +271,6 @@
             const filter = urlParams.get('filter') || 'all';
             const custom = urlParams.get('custom') || '';
             
-            // Применяем значения
             document.getElementById('active').checked = active;
             document.getElementById('oi').value = oi;
             document.getElementById('vol').value = vol;
@@ -374,63 +278,27 @@
             document.getElementById('filter').value = filter;
             document.getElementById('custom').value = custom;
             
-            // Обновляем отображение
-            updateCurrentValues();
-            updateFilterDisplay();
+            updateCustomGroup();
             
             log('Настройки загружены из URL');
+            showStatus('Настройки загружены', 'success');
         }
         
-        // Обновление отображаемых текущих значений
-        function updateCurrentValues() {
-            document.getElementById('current-oi').textContent = document.getElementById('oi').value + '%';
-            document.getElementById('current-vol').textContent = document.getElementById('vol').value + '%';
-            
-            const periodMap = {
-                '1m': '1 минута',
-                '5m': '5 минут',
-                '15m': '15 минут',
-                '30m': '30 минут',
-                '1h': '1 час',
-                '4h': '4 часа',
-                '1d': '1 день'
-            };
-            document.getElementById('current-period').textContent = 
-                periodMap[document.getElementById('period').value] || '1 час';
-            
-            const filterMap = {
-                'all': 'Все пары',
-                'top50': 'Топ-50',
-                'custom': 'Пользовательские'
-            };
-            document.getElementById('current-filter').textContent = 
-                filterMap[document.getElementById('filter').value] || 'Все пары';
-            
-            const statusElement = document.getElementById('status');
-            if (document.getElementById('active').checked) {
-                statusElement.textContent = '✅ Активен';
-                statusElement.className = 'status-indicator status-active';
-            } else {
-                statusElement.textContent = '⏸ На паузе';
-                statusElement.className = 'status-indicator status-inactive';
-            }
-        }
-        
-        // Обновление отображения фильтра
-        function updateFilterDisplay() {
+        // Обновить видимость поля custom
+        function updateCustomGroup() {
             if (filterSelect.value === 'custom') {
-                customPairsGroup.style.display = 'block';
+                customGroup.style.display = 'block';
             } else {
-                customPairsGroup.style.display = 'none';
+                customGroup.style.display = 'none';
             }
         }
         
-        // Сохранение и отправка данных
-        function saveAndSend() {
+        // Отправить данные в бот
+        function sendData() {
             try {
-                log('Начало отправки данных...');
+                log('Начинаем отправку данных...');
                 
-                // Сбор данных
+                // Собираем данные
                 const data = {
                     active: document.getElementById('active').checked,
                     oi: parseFloat(document.getElementById('oi').value),
@@ -440,5 +308,78 @@
                     custom: document.getElementById('custom').value.trim()
                 };
                 
-                // Валидация
-                if (isNaN(data.oi) || data.oi <= 0
+                // Проверяем данные
+                if (isNaN(data.oi) || data.oi <= 0) {
+                    showStatus('Ошибка: неверный порог OI', 'error');
+                    return;
+                }
+                
+                if (isNaN(data.vol) || data.vol <= 0) {
+                    showStatus('Ошибка: неверный порог Volume', 'error');
+                    return;
+                }
+                
+                log(`Данные подготовлены: ${JSON.stringify(data)}`);
+                
+                // Отправляем данные через Telegram Web App
+                if (tg.sendData) {
+                    log('Вызываем tg.sendData()...');
+                    
+                    // Показываем пользователю, что идет отправка
+                    showStatus('Отправка данных...', 'success');
+                    
+                    // Отправляем данные
+                    tg.sendData(JSON.stringify(data));
+                    
+                    log('Данные отправлены через tg.sendData()');
+                    
+                    // Закрываем WebApp через 1 секунду
+                    setTimeout(() => {
+                        tg.close();
+                    }, 1000);
+                    
+                } else {
+                    log('❌ tg.sendData не доступен!');
+                    showStatus('Ошибка: WebApp не инициализирован', 'error');
+                    
+                    // Альтернативный способ: отправляем как обычное сообщение
+                    log('Пытаемся альтернативный способ...');
+                    
+                    // Создаем сообщение с данными
+                    const message = JSON.stringify(data);
+                    log(`Альтернативные данные: ${message}`);
+                    
+                    showStatus('Используется альтернативный метод', 'success');
+                    
+                    // Даем инструкции пользователю
+                    showStatus('Скопируйте эти данные и отправьте боту:\n' + message, 'success');
+                }
+                
+            } catch (error) {
+                log(`❌ Ошибка: ${error.message}`);
+                showStatus(`Ошибка: ${error.message}`, 'error');
+            }
+        }
+        
+        // Слушатель изменения фильтра
+        filterSelect.addEventListener('change', updateCustomGroup);
+        
+        // Автозагрузка при открытии
+        window.addEventListener('load', () => {
+            log('WebApp загружен');
+            log(`Платформа: ${tg.platform}`);
+            log(`Версия: ${tg.version}`);
+            log(`Инициализация: ${tg.initData ? 'Да' : 'Нет'}`);
+            
+            // Загружаем настройки из URL
+            loadFromURL();
+            
+            // Проверяем доступность sendData
+            if (!tg.sendData) {
+                log('⚠️ ВНИМАНИЕ: tg.sendData не доступен!');
+                showStatus('Внимание: открыто не в Telegram', 'error');
+            }
+        });
+        
+        // Тестовая функция для отладки
+       
