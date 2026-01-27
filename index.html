@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Настройки Бота</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            background-color: var(--tg-theme-bg-color, #212121);
+            color: var(--tg-theme-text-color, #ffffff);
+            font-family: sans-serif;
+            padding: 20px;
+        }
+        .card {
+            background: var(--tg-theme-secondary-bg-color, #333);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+        label { display: block; margin-bottom: 10px; font-weight: bold; }
+        input[type="range"] { width: 100%; }
+        select, input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            margin-top: 5px;
+            box-sizing: border-box;
+        }
+        .val { float: right; color: var(--tg-theme-link-color, #34b7f1); }
+        button {
+            width: 100%;
+            padding: 15px;
+            background-color: var(--tg-theme-button-color, #34b7f1);
+            color: var(--tg-theme-button-text-color, #fff);
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <label>Статус мониторинга</label>
+        <select id="active">
+            <option value="true">✅ Включен</option>
+            <option value="false">❌ Выключен</option>
+        </select>
+    </div>
+
+    <div class="card">
+        <label>Порог OI (%) <span id="lbl-oi" class="val">5</span></label>
+        <input type="range" id="oi" min="1" max="30" step="0.5" oninput="upd('lbl-oi', this.value)">
+    </div>
+
+    <div class="card">
+        <label>Порог Volume (%) <span id="lbl-vol" class="val">20</span></label>
+        <input type="range" id="vol" min="5" max="200" step="5" oninput="upd('lbl-vol', this.value)">
+    </div>
+
+    <div class="card">
+        <label>Период сравнения</label>
+        <select id="period">
+            <option value="1m">1 минута</option>
+            <option value="5m">5 минут</option>
+            <option value="15m">15 минут</option>
+            <option value="1h">1 час</option>
+            <option value="4h">4 часа</option>
+            <option value="1d">1 день</option>
+        </select>
+    </div>
+
+    <div class="card">
+        <label>Фильтр пар</label>
+        <select id="filter" onchange="checkCustom()">
+            <option value="all">Все (USDT)</option>
+            <option value="top50">Топ-50 Volume</option>
+            <option value="custom">Свой список</option>
+        </select>
+        <input type="text" id="custom_list" placeholder="BTCUSDT, ETHUSDT" style="display:none; margin-top:10px;">
+    </div>
+
+    <button onclick="save()">💾 Сохранить настройки</button>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // Функция обновления цифр рядом с ползунком
+        function upd(id, val) { document.getElementById(id).innerText = val; }
+        
+        // Показать поле для ввода пар, если выбрано "Custom"
+        function checkCustom() {
+            let val = document.getElementById('filter').value;
+            document.getElementById('custom_list').style.display = (val === 'custom') ? 'block' : 'none';
+        }
+
+        // Читаем настройки из ссылки, которую дал бот
+        const p = new URLSearchParams(window.location.search);
+        
+        if(p.has('oi')) {
+            document.getElementById('active').value = p.get('active');
+            
+            document.getElementById('oi').value = p.get('oi');
+            upd('lbl-oi', p.get('oi'));
+
+            document.getElementById('vol').value = p.get('vol');
+            upd('lbl-vol', p.get('vol'));
+
+            document.getElementById('period').value = p.get('period');
+            document.getElementById('filter').value = p.get('filter');
+            document.getElementById('custom_list').value = p.get('custom') || '';
+            checkCustom();
+        }
+
+        // Отправляем данные боту
+        function save() {
+            let data = {
+                active: document.getElementById('active').value === 'true',
+                oi: parseFloat(document.getElementById('oi').value),
+                vol: parseFloat(document.getElementById('vol').value),
+                period: document.getElementById('period').value,
+                filter: document.getElementById('filter').value,
+                custom: document.getElementById('custom_list').value
+            };
+            tg.sendData(JSON.stringify(data));
+            tg.close();
+        }
+    </script>
+</body>
+</html>
