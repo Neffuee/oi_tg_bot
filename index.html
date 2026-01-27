@@ -3,325 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bot Settings</title>
+    <title>Debug Bot Settings</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <style>
-        /* СБРОС СТИЛЕЙ ТЕЛЕФОНА (ВАЖНО!) */
-        * {
-            -webkit-tap-highlight-color: transparent;
-            box-sizing: border-box;
-        }
-        
-        :root {
-            --primary: #2ecc71;
-            --bg-dark: #0f1110;
-            --card-bg: #1c1c1e;
-            --text-main: #ffffff;
-            --text-sec: #8e8e93;
-        }
-
         body {
-            /* Принудительный черный фон, чтобы не было белых полос */
-            background-color: var(--bg-dark); 
-            background-image: linear-gradient(180deg, #1a472a 0%, #000000 100%);
-            background-attachment: fixed;
-            color: var(--text-main);
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            padding: 16px;
-            min-height: 100vh;
-            color-scheme: dark; /* Говорим браузеру, что у нас темная тема */
-        }
-
-        /* Шапка */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-            padding: 0 4px;
-        }
-        .user-info h2 { margin: 0; font-size: 17px; font-weight: 700; }
-        .user-info p { margin: 0; font-size: 13px; color: var(--primary); opacity: 0.8; }
-
-        /* Тумблер (Switch) */
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 52px;
-            height: 30px;
-        }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #3a3a3c;
-            transition: .3s;
-            border-radius: 30px;
-        }
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 26px;
-            width: 26px;
-            left: 2px;
-            bottom: 2px;
-            background-color: white;
-            transition: .3s;
-            border-radius: 50%;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-        input:checked + .slider { background-color: var(--primary); }
-        input:checked + .slider:before { transform: translateX(22px); }
-
-        /* Статус плашка */
-        .status-card {
+            background-color: #111;
+            color: white;
+            font-family: sans-serif;
+            padding: 20px;
             text-align: center;
-            margin-bottom: 24px;
-            padding: 15px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 16px;
-            backdrop-filter: blur(10px);
         }
-        .status-label { font-size: 11px; text-transform: uppercase; color: var(--text-sec); letter-spacing: 1px; }
-        .status-val { font-size: 28px; font-weight: 800; margin-top: 5px; text-shadow: 0 0 15px rgba(46, 204, 113, 0.3); }
-        .active { color: var(--primary); }
-        .inactive { color: #ff453a; }
-
-        /* Карточки настроек */
-        .card {
-            background: var(--card-bg);
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
-
-        .row-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-        .label { display: flex; align-items: center; font-size: 15px; font-weight: 600; }
-        .icon { 
-            width: 32px; height: 32px; 
-            background: rgba(46, 204, 113, 0.15); 
-            color: var(--primary);
-            border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            margin-right: 12px;
-            font-size: 14px;
-        }
-        .val-display { font-size: 15px; font-weight: 700; color: white; }
-
-        /* ПОЛЗУНКИ (С фиксом для iOS) */
-        input[type=range] {
-            -webkit-appearance: none; /* Убираем стандартный вид iOS */
+        button {
             width: 100%;
-            background: transparent;
-            margin: 10px 0;
-        }
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 24px;
-            width: 24px;
-            border-radius: 50%;
-            background: #ffffff;
-            cursor: pointer;
-            margin-top: -10px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-        }
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 4px;
-            cursor: pointer;
-            background: #3a3a3c;
-            border-radius: 2px;
-        }
-
-        /* SELECT (С фиксом для iOS) */
-        select {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 100%;
-            background: #2c2c2e;
-            color: white;
-            border: 1px solid #3a3a3c;
-            padding: 14px;
-            border-radius: 12px;
-            font-size: 16px;
-            outline: none;
-        }
-        
-        input[type="text"] {
-            -webkit-appearance: none;
-            width: 100%;
-            background: #2c2c2e;
-            color: white;
-            border: 1px solid #3a3a3c;
-            padding: 14px;
-            border-radius: 12px;
-            font-size: 16px;
-            outline: none;
-            margin-top: 10px;
-        }
-
-        /* Кнопка */
-        .btn-save {
-            width: 100%;
-            padding: 16px;
-            background: var(--primary);
-            color: #000;
+            padding: 20px;
+            background: #2ecc71;
             border: none;
-            border-radius: 14px;
-            font-size: 17px;
-            font-weight: 700;
-            margin-top: 20px;
+            border-radius: 10px;
+            font-size: 20px;
+            font-weight: bold;
+            color: black;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+            margin-top: 20px;
         }
-        .btn-save:active { transform: scale(0.98); opacity: 0.9; }
-
+        input { margin: 10px 0; width: 100%; padding: 10px; box-sizing: border-box;}
+        .log { color: yellow; font-size: 12px; text-align: left; margin-top: 20px; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="user-info">
-            <h2 id="username">User</h2>
-            <p id="userid">ID: ...</p>
-        </div>
-        <label class="switch">
-            <input type="checkbox" id="active" onchange="toggleStatus()">
-            <span class="slider"></span>
-        </label>
-    </div>
+    <h2>🛠 Debug Mode</h2>
+    
+    <label>Тест OI (%):</label>
+    <input type="number" id="oi" value="5">
 
-    <div class="status-card">
-        <div class="status-label">Статус мониторинга</div>
-        <div class="status-val active" id="status_text">АКТИВЕН</div>
-    </div>
+    <label>Тест Volume (%):</label>
+    <input type="number" id="vol" value="20">
 
-    <!-- OI -->
-    <div class="card">
-        <div class="row-header">
-            <div class="label"><div class="icon"><i class="fa-solid fa-chart-line"></i></div>Порог OI</div>
-            <div class="val-display" id="lbl-oi">5%</div>
-        </div>
-        <input type="range" id="oi" min="1" max="30" step="0.5" oninput="upd('lbl-oi', this.value)">
-    </div>
+    <button id="btn" onclick="saveData()">🚀 ОТПРАВИТЬ ДАННЫЕ</button>
 
-    <!-- Volume -->
-    <div class="card">
-        <div class="row-header">
-            <div class="label"><div class="icon"><i class="fa-solid fa-sack-dollar"></i></div>Порог Volume</div>
-            <div class="val-display" id="lbl-vol">20%</div>
-        </div>
-        <input type="range" id="vol" min="5" max="200" step="5" oninput="upd('lbl-vol', this.value)">
-    </div>
-
-    <!-- Period -->
-    <div class="card">
-        <div class="row-header">
-            <div class="label"><div class="icon"><i class="fa-regular fa-clock"></i></div>Период</div>
-        </div>
-        <select id="period">
-            <option value="1m">1 минута</option>
-            <option value="5m">5 минут</option>
-            <option value="15m">15 минут</option>
-            <option value="1h">1 час</option>
-            <option value="4h">4 часа</option>
-            <option value="1d">1 день</option>
-        </select>
-    </div>
-
-    <!-- Filter -->
-    <div class="card">
-        <div class="row-header">
-            <div class="label"><div class="icon"><i class="fa-solid fa-filter"></i></div>Фильтр пар</div>
-        </div>
-        <select id="filter" onchange="checkCustom()">
-            <option value="all">Все пары (USDT)</option>
-            <option value="top50">Топ-50 Volume</option>
-            <option value="custom">Свой список...</option>
-        </select>
-        <input type="text" id="custom_list" placeholder="Пример: BTCUSDT, ETHUSDT" style="display:none;">
-    </div>
-
-    <button class="btn-save" onclick="save()">Сохранить настройки</button>
+    <div id="log" class="log">Логи будут здесь...</div>
 
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Безопасное получение данных юзера
-        try {
-            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                document.getElementById('username').innerText = tg.initDataUnsafe.user.first_name;
-                document.getElementById('userid').innerText = "ID: " + tg.initDataUnsafe.user.id;
+        function log(text) {
+            document.getElementById('log').innerHTML += "<br>> " + text;
+        }
+
+        // Проверка инициализации
+        log("WebApp Version: " + tg.version);
+        log("Platform: " + tg.platform);
+
+        function saveData() {
+            try {
+                // 1. Проверяем кнопку
+                alert("1. Кнопка нажата! Начинаем сбор данных...");
+                log("Click registered");
+
+                // 2. Собираем данные
+                let oiVal = document.getElementById('oi').value;
+                let volVal = document.getElementById('vol').value;
+
+                let data = {
+                    active: true,
+                    oi: parseFloat(oiVal),
+                    vol: parseFloat(volVal),
+                    period: "1h",
+                    filter: "all",
+                    custom: ""
+                };
+
+                let jsonString = JSON.stringify(data);
+                alert("2. Данные собраны: " + jsonString);
+                log("Data prepared: " + jsonString);
+
+                // 3. Пытаемся отправить
+                if (tg.sendData) {
+                    alert("3. Отправляю tg.sendData()...");
+                    tg.sendData(jsonString);
+                    log("sendData called");
+                    
+                    // 4. Закрываем
+                    setTimeout(function(){
+                         tg.close();
+                    }, 500); 
+                } else {
+                    alert("❌ ОШИБКА: tg.sendData не найдена! Вы открыли сайт не через кнопку бота?");
+                }
+
+            } catch (e) {
+                alert("❌ КРИТИЧЕСКАЯ ОШИБКА JS: " + e.message);
+                log("Error: " + e.message);
             }
-        } catch (e) {}
-
-        function upd(id, val) { 
-            document.getElementById(id).innerText = val + "%"; 
-        }
-
-        function toggleStatus() {
-            let chk = document.getElementById('active').checked;
-            let txt = document.getElementById('status_text');
-            if(chk) {
-                txt.innerText = "АКТИВЕН";
-                txt.className = "status-val active";
-            } else {
-                txt.innerText = "ОСТАНОВЛЕН";
-                txt.className = "status-val inactive";
-            }
-        }
-
-        function checkCustom() {
-            let val = document.getElementById('filter').value;
-            document.getElementById('custom_list').style.display = (val === 'custom') ? 'block' : 'none';
-        }
-
-        // Читаем настройки из URL
-        const p = new URLSearchParams(window.location.search);
-        if(p.has('oi')) {
-            document.getElementById('active').checked = (p.get('active') === 'true');
-            toggleStatus();
-            
-            document.getElementById('oi').value = p.get('oi');
-            upd('lbl-oi', p.get('oi'));
-
-            document.getElementById('vol').value = p.get('vol');
-            upd('lbl-vol', p.get('vol'));
-
-            document.getElementById('period').value = p.get('period');
-            document.getElementById('filter').value = p.get('filter');
-            document.getElementById('custom_list').value = p.get('custom') || '';
-            checkCustom();
-        }
-
-        function save() {
-            // Вибрация при нажатии
-            if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-
-            let data = {
-                active: document.getElementById('active').checked,
-                oi: parseFloat(document.getElementById('oi').value),
-                vol: parseFloat(document.getElementById('vol').value),
-                period: document.getElementById('period').value,
-                filter: document.getElementById('filter').value,
-                custom: document.getElementById('custom_list').value
-            };
-            
-            // ОТПРАВКА ДАННЫХ
-            tg.sendData(JSON.stringify(data));
-            tg.close();
         }
     </script>
 </body>
