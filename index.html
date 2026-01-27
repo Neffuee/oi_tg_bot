@@ -2,114 +2,353 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Настройки Бота</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bot Settings Premium</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Подключаем иконки и крутой шрифт -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
+        :root {
+            --primary-green: #2ecc71;
+            --dark-green: #145a32;
+            --bg-gradient-start: #0f2e20;
+            --bg-gradient-end: #000000;
+            --card-bg: rgba(30, 30, 30, 0.6);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text-main: #ffffff;
+            --text-secondary: #a0a0a0;
+        }
+
         body {
-            background-color: var(--tg-theme-bg-color, #212121);
-            color: var(--tg-theme-text-color, #ffffff);
-            font-family: sans-serif;
+            background: linear-gradient(180deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
             padding: 20px;
-        }
-        .card {
-            background: var(--tg-theme-secondary-bg-color, #333);
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 15px;
-        }
-        label { display: block; margin-bottom: 10px; font-weight: bold; }
-        input[type="range"] { width: 100%; }
-        select, input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            border-radius: 8px;
-            border: none;
-            margin-top: 5px;
+            min-height: 100vh;
             box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-        .val { float: right; color: var(--tg-theme-link-color, #34b7f1); }
-        button {
+
+        /* Анимация появления */
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
             width: 100%;
-            padding: 15px;
-            background-color: var(--tg-theme-button-color, #34b7f1);
-            color: var(--tg-theme-button-text-color, #fff);
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            animation: slideUp 0.5s ease;
         }
+
+        .avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(45deg, #FFD700, #FF8C00);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-right: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .user-info h2 { margin: 0; font-size: 18px; font-weight: 800; }
+        .user-info p { margin: 0; font-size: 12px; color: var(--primary-green); }
+
+        /* Главная карточка (Стеклянная) */
+        .main-card {
+            width: 100%;
+            background: var(--card-bg);
+            backdrop-filter: blur(15px); /* Эффект стекла */
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 25px;
+            box-sizing: border-box;
+            text-align: center;
+            margin-bottom: 20px;
+            animation: slideUp 0.6s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .status-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .status-value {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(46, 204, 113, 0.4);
+        }
+
+        .active-text { color: var(--primary-green); }
+        .inactive-text { color: #e74c3c; }
+
+        /* Элементы внутри карточки */
+        .data-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 16px;
+        }
+
+        .icon-box {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: var(--primary-green);
+        }
+
+        .control-group { flex-grow: 1; text-align: left; }
+        .control-label { font-size: 14px; color: var(--text-secondary); display: block; margin-bottom: 5px; }
+        .control-value { float: right; font-weight: bold; color: white; }
+
+        /* Кастомный Range Slider */
+        input[type=range] {
+            width: 100%;
+            -webkit-appearance: none;
+            background: transparent;
+        }
+        
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #ffffff;
+            cursor: pointer;
+            margin-top: -8px;
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+            transition: transform 0.1s;
+        }
+        input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 6px;
+            cursor: pointer;
+            background: #444;
+            border-radius: 3px;
+            /* Зеленая полоса прогресса (визуальный хак через box-shadow не всегда работает, используем JS для заливки в будущем, здесь статика) */
+        }
+
+        /* Select стилизация */
+        select {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            color: white;
+            border: 1px solid #444;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+            appearance: none; /* Убираем стандартную стрелку */
+        }
+
+        /* Переключатель (Toggle) */
+        .toggle-container {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .toggle-container input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #333;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--primary-green); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        /* Кнопка сохранить */
+        .save-btn {
+            width: 100%;
+            padding: 18px;
+            background: var(--primary-green);
+            color: #000;
+            border: none;
+            border-radius: 16px;
+            font-size: 18px;
+            font-weight: 800;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            animation: slideUp 0.8s ease;
+            box-shadow: 0 5px 20px rgba(46, 204, 113, 0.3);
+        }
+
+        .save-btn:active {
+            transform: scale(0.96);
+            box-shadow: 0 2px 10px rgba(46, 204, 113, 0.2);
+        }
+
+        #custom_block { animation: slideUp 0.3s ease; }
+
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <label>Статус мониторинга</label>
-        <select id="active">
-            <option value="true">✅ Включен</option>
-            <option value="false">❌ Выключен</option>
-        </select>
+    <!-- Шапка профиля -->
+    <div class="header">
+        <div class="avatar">🤖</div>
+        <div class="user-info">
+            <h2 id="username">Пользователь</h2>
+            <p id="user_id">ID: ...</p>
+        </div>
+        <div style="margin-left: auto;">
+             <!-- Свичер мониторинга -->
+            <label class="toggle-container">
+                <input type="checkbox" id="active" onchange="toggleStatus()">
+                <span class="slider"></span>
+            </label>
+        </div>
     </div>
 
-    <div class="card">
-        <label>Порог OI (%) <span id="lbl-oi" class="val">5</span></label>
-        <input type="range" id="oi" min="1" max="30" step="0.5" oninput="upd('lbl-oi', this.value)">
+    <!-- Основная карточка -->
+    <div class="main-card">
+        <div class="status-title">Статус мониторинга</div>
+        <div class="status-value active-text" id="status_text">АКТИВЕН</div>
+        
+        <!-- Ползунок OI -->
+        <div class="data-row">
+            <div class="icon-box"><i class="fa-solid fa-chart-line"></i></div>
+            <div class="control-group">
+                <label class="control-label">Порог OI <span class="control-value" id="lbl-oi">5%</span></label>
+                <input type="range" id="oi" min="1" max="30" step="0.5" oninput="upd('lbl-oi', this.value, '%')">
+            </div>
+        </div>
+
+        <!-- Ползунок Volume -->
+        <div class="data-row">
+            <div class="icon-box"><i class="fa-solid fa-sack-dollar"></i></div>
+            <div class="control-group">
+                <label class="control-label">Порог Volume <span class="control-value" id="lbl-vol">20%</span></label>
+                <input type="range" id="vol" min="5" max="200" step="5" oninput="upd('lbl-vol', this.value, '%')">
+            </div>
+        </div>
+
+        <!-- Выбор Периода -->
+        <div class="data-row">
+            <div class="icon-box"><i class="fa-regular fa-clock"></i></div>
+            <div class="control-group">
+                <label class="control-label">Период сравнения</label>
+                <select id="period">
+                    <option value="1m">1 минута</option>
+                    <option value="5m">5 минут</option>
+                    <option value="15m">15 минут</option>
+                    <option value="1h">1 час</option>
+                    <option value="4h">4 часа</option>
+                    <option value="1d">1 день</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Фильтр пар -->
+        <div class="data-row" style="margin-bottom: 0;">
+            <div class="icon-box"><i class="fa-solid fa-filter"></i></div>
+            <div class="control-group">
+                <label class="control-label">Фильтр пар</label>
+                <select id="filter" onchange="checkCustom()">
+                    <option value="all">Все пары (USDT)</option>
+                    <option value="top50">Топ-50 Volume</option>
+                    <option value="custom">Свой список...</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- Поле ввода кастомных пар -->
+        <div id="custom_block" style="display:none; margin-top: 15px;">
+            <input type="text" id="custom_list" placeholder="BTCUSDT, ETHUSDT..." 
+                   style="width: 100%; padding: 15px; border-radius: 12px; background: rgba(0,0,0,0.3); border: 1px solid #444; color: white;">
+        </div>
+
     </div>
 
-    <div class="card">
-        <label>Порог Volume (%) <span id="lbl-vol" class="val">20</span></label>
-        <input type="range" id="vol" min="5" max="200" step="5" oninput="upd('lbl-vol', this.value)">
-    </div>
-
-    <div class="card">
-        <label>Период сравнения</label>
-        <select id="period">
-            <option value="1m">1 минута</option>
-            <option value="5m">5 минут</option>
-            <option value="15m">15 минут</option>
-            <option value="1h">1 час</option>
-            <option value="4h">4 часа</option>
-            <option value="1d">1 день</option>
-        </select>
-    </div>
-
-    <div class="card">
-        <label>Фильтр пар</label>
-        <select id="filter" onchange="checkCustom()">
-            <option value="all">Все (USDT)</option>
-            <option value="top50">Топ-50 Volume</option>
-            <option value="custom">Свой список</option>
-        </select>
-        <input type="text" id="custom_list" placeholder="BTCUSDT, ETHUSDT" style="display:none; margin-top:10px;">
-    </div>
-
-    <button onclick="save()">💾 Сохранить настройки</button>
+    <!-- Кнопка действия -->
+    <button class="save-btn" onclick="save()">
+        <i class="fa-solid fa-check"></i> Сохранить настройки
+    </button>
 
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
-
-        // Функция обновления цифр рядом с ползунком
-        function upd(id, val) { document.getElementById(id).innerText = val; }
         
-        // Показать поле для ввода пар, если выбрано "Custom"
-        function checkCustom() {
-            let val = document.getElementById('filter').value;
-            document.getElementById('custom_list').style.display = (val === 'custom') ? 'block' : 'none';
+        // Получаем данные пользователя
+        if(tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            document.getElementById('username').innerText = tg.initDataUnsafe.user.first_name;
+            document.getElementById('user_id').innerText = "ID: " + tg.initDataUnsafe.user.id;
         }
 
-        // Читаем настройки из ссылки, которую дал бот
+        function upd(id, val, suffix) { 
+            document.getElementById(id).innerText = val + suffix; 
+        }
+
+        function toggleStatus() {
+            let chk = document.getElementById('active').checked;
+            let txt = document.getElementById('status_text');
+            if(chk) {
+                txt.innerText = "АКТИВЕН";
+                txt.className = "status-value active-text";
+            } else {
+                txt.innerText = "ОСТАНОВЛЕН";
+                txt.className = "status-value inactive-text";
+            }
+        }
+        
+        function checkCustom() {
+            let val = document.getElementById('filter').value;
+            document.getElementById('custom_block').style.display = (val === 'custom') ? 'block' : 'none';
+        }
+
+        // Загрузка настроек из URL
         const p = new URLSearchParams(window.location.search);
         
         if(p.has('oi')) {
-            document.getElementById('active').value = p.get('active');
+            let isActive = p.get('active') === 'true';
+            document.getElementById('active').checked = isActive;
+            toggleStatus();
             
             document.getElementById('oi').value = p.get('oi');
-            upd('lbl-oi', p.get('oi'));
+            upd('lbl-oi', p.get('oi'), '%');
 
             document.getElementById('vol').value = p.get('vol');
-            upd('lbl-vol', p.get('vol'));
+            upd('lbl-vol', p.get('vol'), '%');
 
             document.getElementById('period').value = p.get('period');
             document.getElementById('filter').value = p.get('filter');
@@ -117,10 +356,12 @@
             checkCustom();
         }
 
-        // Отправляем данные боту
         function save() {
+            // Эффект вибрации (Haptic Feedback)
+            tg.HapticFeedback.notificationOccurred('success');
+
             let data = {
-                active: document.getElementById('active').value === 'true',
+                active: document.getElementById('active').checked,
                 oi: parseFloat(document.getElementById('oi').value),
                 vol: parseFloat(document.getElementById('vol').value),
                 period: document.getElementById('period').value,
