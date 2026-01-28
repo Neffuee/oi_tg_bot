@@ -3,567 +3,642 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OI Monitor Bot - Панель управления</title>
+    <title>OI Monitor Pro - Веб-панель</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Все стили остаются такими же, только добавь этот новый стиль */
-        
-        .login-section {
-            display: none;
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a67d8;
+            --secondary: #764ba2;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #1f2937;
+            --light: #f9fafb;
+            --gray: #9ca3af;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
             background: white;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            margin-bottom: 20px;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            animation: slideUp 0.5s ease-out;
         }
-        
-        .login-section.active {
-            display: block;
-            animation: fadeIn 0.5s ease;
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        
-        .login-input {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #e5e7eb;
-            border-radius: 10px;
-            font-size: 16px;
-            margin: 15px 0;
-            text-align: center;
-        }
-        
-        .login-input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        .login-btn {
-            width: 100%;
-            padding: 18px;
-            background: #667eea;
+
+        /* Шапка с пользователем */
+        .user-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 10px;
+            padding: 25px 25px 30px;
+            position: relative;
+            overflow: hidden;
         }
-        
-        .login-help {
+
+        .user-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 30px 30px;
+            opacity: 0.1;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .user-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .user-avatar i {
+            font-size: 32px;
+            color: white;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-id {
+            font-size: 14px;
+            opacity: 0.9;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 4px 12px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .user-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            opacity: 0.9;
+            margin-top: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Статистика */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            padding: 0 25px;
+            margin-top: -15px;
+            position: relative;
+            z-index: 3;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            color: white;
+            font-size: 20px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--gray);
+            font-weight: 500;
+        }
+
+        /* Настройки */
+        .settings-section {
+            padding: 30px 25px;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--dark);
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 25px;
+        }
+
+        .section-title i {
+            color: var(--primary);
+        }
+
+        .setting-item {
+            background: var(--light);
+            border-radius: 16px;
+            padding: 22px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .setting-item:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+        }
+
+        .setting-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .setting-name {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 16px;
+        }
+
+        .setting-name i {
+            color: var(--primary);
+            width: 20px;
+            text-align: center;
+        }
+
+        .setting-value {
+            background: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 15px;
+            border: 2px solid var(--primary);
+        }
+
+        .setting-control {
+            margin-top: 15px;
+            display: none;
+        }
+
+        .setting-control.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Слайдеры */
+        .slider-container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .slider-value {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 24px;
+        }
+
+        .slider {
+            width: 100%;
+            height: 10px;
+            -webkit-appearance: none;
+            background: #e5e7eb;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            border: 4px solid white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
             font-size: 12px;
-            color: #666;
+            color: var(--gray);
+        }
+
+        /* Периоды */
+        .period-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
             margin-top: 15px;
         }
-        
-        .user-id-display {
-            background: #f0f9ff;
-            border: 2px solid #0ea5e9;
-            border-radius: 10px;
-            padding: 10px;
-            margin: 10px 0;
-            font-family: monospace;
+
+        .period-option {
+            padding: 15px 5px;
+            background: white;
+            border-radius: 12px;
             text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid #e5e7eb;
+            font-weight: 500;
         }
-        
-        /* Остальные стили остаются такими же... */
+
+        .period-option:hover {
+            border-color: var(--primary);
+        }
+
+        .period-option.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Кнопки */
+        .action-buttons {
+            padding: 0 25px 30px;
+            display: grid;
+            gap: 15px;
+        }
+
+        .action-btn {
+            padding: 20px;
+            border: none;
+            border-radius: 16px;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .action-btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--light);
+            color: var(--dark);
+            border: 2px solid #e5e7eb;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        /* Уведомления */
+        .notification {
+            position: fixed;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: white;
+            padding: 18px 25px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-left: 5px solid var(--primary);
+        }
+
+        .notification.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .notification.success {
+            border-left-color: var(--success);
+        }
+
+        .notification.error {
+            border-left-color: var(--danger);
+        }
+
+        /* Загрузка */
+        .loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(102, 126, 234, 0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Мобильная адаптация */
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .period-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .user-name {
+                font-size: 20px;
+            }
+        }
     </style>
 </head>
 <body>
-    <!-- Секция входа (показывается если нет Telegram WebApp) -->
-    <div class="login-section" id="loginSection">
-        <div style="font-size: 60px; color: #667eea; margin-bottom: 20px;">
-            <i class="fas fa-robot"></i>
-        </div>
-        <h2 style="color: #333; margin-bottom: 10px;">OI Monitor Bot</h2>
-        <p style="color: #666; margin-bottom: 20px;">Панель управления настройками</p>
-        
-        <div id="telegramUserInfo" style="display: none;">
-            <div class="user-id-display">
-                Telegram ID: <span id="telegramUserId">определяется...</span>
-            </div>
-        </div>
-        
-        <div id="manualLogin" style="display: none;">
-            <input type="number" 
-                   class="login-input" 
-                   id="manualUserId" 
-                   placeholder="Введите ваш Telegram ID"
-                   oninput="validateUserId(this)">
-            <div id="userIdError" style="color: #ef4444; font-size: 12px; display: none;">
-                ID должен быть числом
-            </div>
-            
-            <div class="login-help">
-                Как узнать ID? Откройте @userinfobot в Telegram и отправьте /start
-            </div>
-        </div>
-        
-        <button class="login-btn" onclick="processLogin()" id="loginBtn">
-            <i class="fas fa-sign-in-alt"></i> ПРОДОЛЖИТЬ
-        </button>
-        
-        <div class="login-help">
-            <a href="https://t.me/neffue_bot" style="color: #667eea; text-decoration: none;">
-                <i class="fab fa-telegram"></i> Открыть бота в Telegram
-            </a>
+    <div class="loader" id="loader">
+        <div class="spinner"></div>
+        <div style="color: var(--primary); font-weight: 600; font-size: 18px;">
+            Загрузка веб-панели...
         </div>
     </div>
-    
-    <div class="container" id="mainContainer" style="display: none;">
-        <!-- Шапка с кнопкой смены пользователя -->
-        <header class="header">
-            <div class="user-info">
-                <div class="avatar">
-                    <i class="fas fa-user-circle"></i>
-                </div>
-                <div class="user-details">
-                    <h1 class="username" id="displayUsername">Пользователь</h1>
-                    <p class="user-id">
-                        ID: <span id="displayUserId">-</span>
-                        <button onclick="switchUser()" style="
-                            background: none;
-                            border: none;
-                            color: #667eea;
-                            cursor: pointer;
-                            margin-left: 10px;
-                            font-size: 12px;
-                        ">
-                            <i class="fas fa-exchange-alt"></i> сменить
-                        </button>
-                    </p>
-                </div>
-            </div>
-        </header>
 
-        <!-- Карточка статуса -->
-        <div class="status-card">
-            <!-- ... остальной HTML код (такой же как раньше) ... -->
-            <!-- Вставь сюда весь остальной HTML из предыдущей версии -->
-            <!-- Начиная с <div class="card-header"> и до конца -->
-            
-            <!-- Вот кратко что должно быть: -->
-            <div class="card-header">
-                <h2><i class="fas fa-chart-line"></i> СТАТУС БОТА</h2>
-            </div>
-            
-            <div class="bot-status">
-                <div class="status-indicator">
-                    <div class="status-dot" id="statusDot"></div>
-                    <span id="statusText">Мониторинг активен</span>
+    <div class="container" id="app" style="display: none;">
+        <!-- Шапка пользователя -->
+        <div class="user-header">
+            <div class="user-profile">
+                <div class="user-avatar" id="userAvatar">
+                    <i class="fas fa-user"></i>
                 </div>
-                <div class="status-time" id="lastUpdate">
-                    обновлено сейчас
+                <div class="user-info">
+                    <div class="user-name">
+                        <span id="userName">Пользователь</span>
+                        <span class="user-id" id="userId">-</span>
+                    </div>
+                    <div class="user-status">
+                        <div class="status-dot"></div>
+                        <span id="userStatus">Подключен к боту</span>
+                    </div>
                 </div>
             </div>
-            
-            <div class="stats-grid">
-                <div class="stat-item">
+        </div>
+
+        <!-- Статистика -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
                     <i class="fas fa-coins"></i>
-                    <div class="stat-value" id="activePairs">0</div>
-                    <div class="stat-label">Активных пар</div>
                 </div>
-                <div class="stat-item">
+                <div class="stat-value" id="activePairs">0</div>
+                <div class="stat-label">Активных пар</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
                     <i class="fas fa-bell"></i>
-                    <div class="stat-value" id="signals24h">0</div>
-                    <div class="stat-label">Сигналов за 24ч</div>
+                </div>
+                <div class="stat-value" id="signalsCount">0</div>
+                <div class="stat-label">Мои сигналы</div>
+            </div>
+        </div>
+
+        <!-- Настройки -->
+        <div class="settings-section">
+            <div class="section-title">
+                <i class="fas fa-sliders-h"></i>
+                НАСТРОЙКИ БОТА
+            </div>
+
+            <!-- Порог OI -->
+            <div class="setting-item" onclick="toggleSetting('oiSetting')">
+                <div class="setting-header">
+                    <div class="setting-name">
+                        <i class="fas fa-chart-line"></i>
+                        Порог Open Interest
+                    </div>
+                    <div class="setting-value" id="oiValue">5%</div>
+                </div>
+                <div class="setting-control" id="oiSetting">
+                    <div class="slider-container">
+                        <div class="slider-header">
+                            <span>Значение:</span>
+                            <span class="slider-value" id="oiSliderValue">5%</span>
+                        </div>
+                        <input type="range" min="1" max="50" value="5" class="slider" 
+                               oninput="updateSlider('oi', this.value)">
+                        <div class="slider-labels">
+                            <span>1%</span>
+                            <span>25%</span>
+                            <span>50%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Порог Volume -->
+            <div class="setting-item" onclick="toggleSetting('volumeSetting')">
+                <div class="setting-header">
+                    <div class="setting-name">
+                        <i class="fas fa-chart-bar"></i>
+                        Порог Volume
+                    </div>
+                    <div class="setting-value" id="volumeValue">20%</div>
+                </div>
+                <div class="setting-control" id="volumeSetting">
+                    <div class="slider-container">
+                        <div class="slider-header">
+                            <span>Значение:</span>
+                            <span class="slider-value" id="volumeSliderValue">20%</span>
+                        </div>
+                        <input type="range" min="10" max="200" value="20" class="slider" 
+                               oninput="updateSlider('volume', this.value)">
+                        <div class="slider-labels">
+                            <span>10%</span>
+                            <span>100%</span>
+                            <span>200%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Период сравнения -->
+            <div class="setting-item" onclick="toggleSetting('periodSetting')">
+                <div class="setting-header">
+                    <div class="setting-name">
+                        <i class="fas fa-clock"></i>
+                        Период сравнения
+                    </div>
+                    <div class="setting-value" id="periodValue">1 час</div>
+                </div>
+                <div class="setting-control" id="periodSetting">
+                    <div class="period-grid">
+                        <div class="period-option active" onclick="selectPeriod('1m')">1 мин</div>
+                        <div class="period-option" onclick="selectPeriod('5m')">5 мин</div>
+                        <div class="period-option" onclick="selectPeriod('15m')">15 мин</div>
+                        <div class="period-option" onclick="selectPeriod('30m')">30 мин</div>
+                        <div class="period-option" onclick="selectPeriod('1h')">1 час</div>
+                        <div class="period-option" onclick="selectPeriod('2h')">2 часа</div>
+                        <div class="period-option" onclick="selectPeriod('4h')">4 часа</div>
+                        <div class="period-option" onclick="selectPeriod('1d')">1 день</div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Статус синхронизации -->
-        <div class="sync-status" id="syncStatus">
-            <div id="syncMessage"></div>
-        </div>
-
-        <!-- Настройки (такие же как раньше) -->
-        <div class="settings-section">
-            <h3><i class="fas fa-cogs"></i> НАСТРОЙКИ БОТА</h3>
-            <!-- ... все настройки такие же ... -->
-        </div>
-
-        <!-- Кнопки управления -->
+        <!-- Кнопки действий -->
         <div class="action-buttons">
-            <button class="action-btn apply-btn" onclick="applySettings()">
-                <i class="fas fa-check"></i> ПРИМЕНИТЬ НАСТРОЙКИ
+            <button class="action-btn btn-primary" onclick="applySettings()">
+                <i class="fas fa-check"></i>
+                ПРИМЕНИТЬ НАСТРОЙКИ
             </button>
-            <button class="action-btn" onclick="reloadSettings()" style="background: #f0f2f5; color: #333;">
-                <i class="fas fa-sync-alt"></i> ЗАГРУЗИТЬ НАСТРОЙКИ
+            <button class="action-btn btn-secondary" onclick="loadUserData()">
+                <i class="fas fa-sync-alt"></i>
+                ОБНОВИТЬ ДАННЫЕ
             </button>
-        </div>
-
-        <!-- Управление ботом -->
-        <div class="bot-control">
-            <h3><i class="fas fa-terminal"></i> УПРАВЛЕНИЕ</h3>
-            <button class="bot-control-btn" onclick="openTelegramBot()">
-                <i class="fab fa-telegram"></i> Открыть в Telegram
+            <button class="action-btn btn-success" onclick="testConnection()">
+                <i class="fas fa-wifi"></i>
+                ПРОВЕРИТЬ СВЯЗЬ
             </button>
-            <div style="margin-top: 10px; font-size: 12px; color: #666;">
-                Текущий пользователь: <span id="currentUserIdDisplay">-</span>
-            </div>
         </div>
     </div>
 
-    <!-- Уведомление -->
     <div class="notification" id="notification">
-        Настройки сохранены!
+        <i class="fas fa-check-circle"></i>
+        <span id="notificationText">Сообщение</span>
     </div>
 
     <script>
         // Глобальные переменные
-        let currentUserId = null;
+        let currentUser = null;
         let currentSettings = {
-            monitoring: true,
             oiThreshold: 5,
             volumeThreshold: 20,
             period: '1h',
             filter: 'all',
-            customPairs: ''
+            monitoring: true
         };
 
-        // Инициализация
-        document.addEventListener('DOMContentLoaded', function() {
-            checkUserSession();
-        });
-
-        // Проверяем сессию пользователя
-        function checkUserSession() {
-            // 1. Пробуем получить данные из Telegram WebApp
-            if (window.Telegram && Telegram.WebApp) {
-                handleTelegramUser();
-            } 
-            // 2. Пробуем получить из localStorage
-            else if (localStorage.getItem('oiBotCurrentUserId')) {
-                const savedUserId = localStorage.getItem('oiBotCurrentUserId');
-                const savedUsername = localStorage.getItem('oiBotUsername') || 'Пользователь';
-                showMainInterface(savedUserId, savedUsername);
-            }
-            // 3. Показываем экран входа
-            else {
-                showLoginScreen();
-            }
-        }
-
-        // Обработка пользователя из Telegram WebApp
-        function handleTelegramUser() {
-            const user = Telegram.WebApp.initDataUnsafe.user;
-            
-            if (user && user.id) {
-                // Пользователь из Telegram
-                currentUserId = user.id;
-                const username = user.first_name || user.username || 'Telegram User';
-                
-                // Инициализируем WebApp
-                Telegram.WebApp.expand();
-                Telegram.WebApp.setHeaderColor('#667eea');
-                Telegram.WebApp.setBackgroundColor('#667eea');
-                
-                // Прячем секцию входа, показываем основной интерфейс
-                showMainInterface(currentUserId, username);
-                
-                // Сохраняем в localStorage
-                localStorage.setItem('oiBotCurrentUserId', currentUserId);
-                localStorage.setItem('oiBotUsername', username);
-                
-                // Загружаем настройки
-                loadSettingsFromBot();
-            } else {
-                // Telegram WebApp есть, но пользователь не определен
-                showLoginScreen();
-                document.getElementById('telegramUserInfo').style.display = 'block';
-                document.getElementById('telegramUserId').textContent = 'не определен';
-            }
-        }
-
-        // Показать экран входа
-        function showLoginScreen() {
-            document.getElementById('loginSection').classList.add('active');
-            document.getElementById('mainContainer').style.display = 'none';
-            document.getElementById('manualLogin').style.display = 'block';
-        }
-
-        // Показать основной интерфейс
-        function showMainInterface(userId, username) {
-            currentUserId = userId;
-            
-            // Обновляем отображение
-            document.getElementById('displayUsername').textContent = username;
-            document.getElementById('displayUserId').textContent = userId;
-            document.getElementById('currentUserIdDisplay').textContent = userId;
-            
-            // Прячем экран входа, показываем основной интерфейс
-            document.getElementById('loginSection').classList.remove('active');
-            document.getElementById('mainContainer').style.display = 'block';
-            
-            // Загружаем настройки
-            loadSettingsFromBot();
-            
-            // Запускаем обновление данных
-            updateDisplay();
-            simulateBotData();
-            setInterval(simulateBotData, 30000);
-            setInterval(updateTime, 60000);
-        }
-
-        // Валидация ID пользователя
-        function validateUserId(input) {
-            const userId = input.value.trim();
-            const errorEl = document.getElementById('userIdError');
-            
-            if (userId && !isNaN(userId) && userId > 0) {
-                errorEl.style.display = 'none';
-                return true;
-            } else {
-                errorEl.style.display = 'block';
-                return false;
-            }
-        }
-
-        // Обработка входа
-        function processLogin() {
-            // Если Telegram WebApp
-            if (window.Telegram && Telegram.WebApp) {
-                const user = Telegram.WebApp.initDataUnsafe.user;
-                if (user && user.id) {
-                    showMainInterface(user.id, user.first_name || 'Telegram User');
-                    return;
-                }
-            }
-            
-            // Ручной ввод
-            const manualInput = document.getElementById('manualUserId');
-            const userId = manualInput.value.trim();
-            
-            if (!validateUserId(manualInput)) {
-                showNotification('Введите корректный Telegram ID', true);
-                return;
-            }
-            
-            // Сохраняем пользователя
-            localStorage.setItem('oiBotCurrentUserId', userId);
-            localStorage.setItem('oiBotUsername', 'Пользователь ' + userId);
-            
-            showMainInterface(userId, 'Пользователь ' + userId);
-            showNotification('Вы вошли как пользователь ' + userId);
-        }
-
-        // Смена пользователя
-        function switchUser() {
-            // Очищаем сессию
-            localStorage.removeItem('oiBotCurrentUserId');
-            localStorage.removeItem('oiBotUsername');
-            localStorage.removeItem('oiBotSettings');
-            
-            // Показываем экран входа
-            showLoginScreen();
-            showNotification('Вы вышли из системы');
-        }
-
-        // ЗАГРУЗКА НАСТРОЕК ИЗ БОТА
-        async function loadSettingsFromBot() {
-            if (!currentUserId) {
-                showSyncStatus('⚠️ Необходимо войти в систему', 'error');
-                return;
-            }
-            
-            showSyncStatus('🔄 Загрузка настроек для пользователя ' + currentUserId + '...', 'loading');
-            
-            try {
-                const response = await fetch(`http://localhost:5000/api/user/${currentUserId}/settings`);
-                
-                if (!response.ok) {
-                    if (response.status === 404) {
-                        // Пользователь не найден - используем дефолтные настройки
-                        showSyncStatus('👤 Новый пользователь. Используются настройки по умолчанию.', 'success');
-                        loadDefaultSettings();
-                    } else {
-                        throw new Error(`API error: ${response.status}`);
-                    }
-                    return;
-                }
-                
-                const result = await response.json();
-                
-                if (result.status === 'success') {
-                    const settings = result.settings;
-                    
-                    // Обновляем локальные настройки из бота
-                    currentSettings.oiThreshold = settings.oi_threshold || 5;
-                    currentSettings.volumeThreshold = settings.volume_threshold || 20;
-                    currentSettings.period = settings.comparison_period || '1h';
-                    currentSettings.filter = settings.pair_filter || 'all';
-                    currentSettings.monitoring = settings.monitoring_active !== false;
-                    
-                    if (settings.pair_filter === 'custom' && settings.custom_pairs) {
-                        currentSettings.customPairs = Array.isArray(settings.custom_pairs) 
-                            ? settings.custom_pairs.join(', ')
-                            : settings.custom_pairs;
-                    }
-                    
-                    // Обновляем интерфейс
-                    updateDisplay();
-                    
-                    showSyncStatus('✅ Настройки загружены!', 'success');
-                    console.log('Настройки загружены для пользователя', currentUserId, settings);
-                    
-                    // Сохраняем локально
-                    saveLocalSettings();
-                    
-                } else {
-                    throw new Error(result.message || 'Неизвестная ошибка');
-                }
-                
-            } catch (error) {
-                console.error('Ошибка загрузки настроек:', error);
-                showSyncStatus('⚠️ Не удалось загрузить настройки. Используются локальные.', 'error');
-                loadLocalSettings();
-            }
-            
-            // Скрываем статус через 3 секунды
-            setTimeout(() => {
-                hideSyncStatus();
-            }, 3000);
-        }
-
-        // Загрузка дефолтных настроек
-        function loadDefaultSettings() {
-            currentSettings = {
-                monitoring: true,
-                oiThreshold: 5,
-                volumeThreshold: 20,
-                period: '1h',
-                filter: 'all',
-                customPairs: ''
-            };
-            
-            updateDisplay();
-            saveLocalSettings();
-        }
-
-        // Загрузка локальных настроек
-        function loadLocalSettings() {
-            const saved = localStorage.getItem(`oiBotSettings_${currentUserId}`);
-            if (saved) {
-                try {
-                    const parsed = JSON.parse(saved);
-                    currentSettings = { ...currentSettings, ...parsed };
-                    updateDisplay();
-                } catch (e) {
-                    console.error('Ошибка парсинга локальных настроек:', e);
-                    loadDefaultSettings();
-                }
-            } else {
-                loadDefaultSettings();
-            }
-        }
-
-        // Сохранение локальных настроек
-        function saveLocalSettings() {
-            localStorage.setItem(`oiBotSettings_${currentUserId}`, JSON.stringify(currentSettings));
-        }
-
-        // ОТПРАВКА НАСТРОЕК В БОТ
-        async function applySettings() {
-            if (!currentUserId) {
-                showNotification('⚠️ Сначала войдите в систему', true);
-                return;
-            }
-            
-            // 1. Обновляем кастомные пары
-            if (currentSettings.filter === 'custom') {
-                const customPairs = document.getElementById('customPairsInput').value;
-                currentSettings.customPairs = customPairs;
-            }
-            
-            // 2. Сохраняем локально
-            saveLocalSettings();
-            
-            // 3. Показываем статус синхронизации
-            showSyncStatus(`🔄 Отправляем настройки для пользователя ${currentUserId}...`, 'loading');
-            
-            // 4. Подготавливаем данные
-            const settingsData = {
-                oi_threshold: currentSettings.oiThreshold,
-                volume_threshold: currentSettings.volumeThreshold,
-                comparison_period: currentSettings.period,
-                pair_filter: currentSettings.filter,
-                monitoring_active: currentSettings.monitoring
-            };
-            
-            if (currentSettings.filter === 'custom' && currentSettings.customPairs) {
-                settingsData.custom_pairs = currentSettings.customPairs;
-            }
-            
-            try {
-                // 5. Пробуем отправить через Telegram WebApp
-                if (window.Telegram && Telegram.WebApp) {
-                    Telegram.WebApp.sendData(JSON.stringify({
-                        action: 'update_settings',
-                        user_id: currentUserId,
-                        settings: {
-                            oiThreshold: currentSettings.oiThreshold,
-                            volumeThreshold: currentSettings.volumeThreshold,
-                            period: currentSettings.period,
-                            filter: currentSettings.filter,
-                            customPairs: currentSettings.customPairs,
-                            monitoring: currentSettings.monitoring
-                        }
-                    }));
-                    
-                    showSyncStatus('✅ Настройки отправлены через Telegram!', 'success');
-                    showNotification('Настройки отправлены в бот!');
-                    
-                } else {
-                    // 6. Или отправляем через API
-                    const response = await fetch(`http://localhost:5000/api/user/${currentUserId}/update`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(settingsData)
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (result.status === 'success') {
-                        showSyncStatus('✅ Настройки сохранены в боте!', 'success');
-                        showNotification('Настройки сохранены!');
-                        console.log('Настройки сохранены для пользователя', currentUserId, result);
-                    } else {
-                        showSyncStatus('❌ Ошибка: ' + (result.message || 'Неизвестная ошибка'), 'error');
-                        showNotification('Ошибка сохранения', true);
-                    }
-                }
-                
-            } catch (error) {
-                console.error('Ошибка отправки настроек:', error);
-                showSyncStatus('❌ Ошибка соединения с ботом', 'error');
-                showNotification('Ошибка соединения', true);
-            }
-            
-            // 7. Закрываем все слайдеры
-            document.querySelectorAll('.slider-container').forEach(s => {
-                s.classList.remove('active');
-            });
-            
-            // 8. Обновляем отображение
-            updateDisplay();
-            
-            // 9. Скрываем статус синхронизации
-            setTimeout(() => {
-                hideSyncStatus();
-            }, 3000);
-        }
-
-        // Остальные функции (updateDisplay, toggleSlider, selectPeriod, и т.д.)
-        // остаются такими же как в предыдущей версии
-        
-        // ВАЖНО: нужно добавить эти вспомогательные функции если их нет:
-        
-        // Периоды для отображения
         const periods = {
             '1m': '1 минута',
-            '5m': '5 минут',
+            '5m': '5 минут', 
             '15m': '15 минут',
             '30m': '30 минут',
             '1h': '1 час',
@@ -572,77 +647,350 @@
             '1d': '1 день'
         };
 
-        // Фильтры для отображения
-        const filters = {
-            'all': 'Все пары',
-            'top50': 'Топ-50',
-            'custom': 'Кастомные'
-        };
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', async function() {
+            await initializeApp();
+        });
 
-        // Показать статус синхронизации
-        function showSyncStatus(message, type = 'loading') {
-            const syncStatus = document.getElementById('syncStatus');
-            const syncMessage = document.getElementById('syncMessage');
-            
-            syncStatus.className = 'sync-status show';
-            syncMessage.innerHTML = message;
-            
-            if (type === 'success') {
-                syncStatus.classList.add('success');
-                syncStatus.classList.remove('error');
-            } else if (type === 'error') {
-                syncStatus.classList.add('error');
-                syncStatus.classList.remove('success');
-            } else {
-                syncStatus.classList.remove('success', 'error');
+        // Основная функция инициализации
+        async function initializeApp() {
+            try {
+                // Пробуем получить данные из Telegram WebApp
+                if (window.Telegram && Telegram.WebApp) {
+                    await initializeTelegramUser();
+                } else {
+                    // Если не в Telegram - используем демо-режим
+                    initializeDemoUser();
+                }
+                
+                // Загружаем настройки пользователя
+                await loadUserSettings();
+                
+                // Запускаем обновление данных
+                startDataUpdates();
+                
+                // Показываем интерфейс
+                showApp();
+                
+            } catch (error) {
+                console.error('Ошибка инициализации:', error);
+                showError('Ошибка загрузки приложения');
             }
         }
 
-        function hideSyncStatus() {
-            const syncStatus = document.getElementById('syncStatus');
-            syncStatus.classList.remove('show');
+        // Инициализация пользователя из Telegram
+        async function initializeTelegramUser() {
+            const tg = Telegram.WebApp;
+            
+            // Расширяем на весь экран
+            tg.expand();
+            
+            // Настраиваем тему
+            tg.setHeaderColor('#667eea');
+            tg.setBackgroundColor('#667eea');
+            
+            // Получаем данные пользователя
+            const user = tg.initDataUnsafe.user;
+            
+            if (user) {
+                currentUser = {
+                    id: user.id,
+                    firstName: user.first_name || '',
+                    lastName: user.last_name || '',
+                    username: user.username || '',
+                    photoUrl: null,
+                    isTelegram: true
+                };
+                
+                // Пробуем получить фото
+                if (user.photo_url) {
+                    currentUser.photoUrl = user.photo_url;
+                }
+                
+                updateUserDisplay();
+                showNotification('👋 Привет, ' + user.first_name + '!');
+                
+                // Отправляем приветствие в бот
+                if (tg.sendData) {
+                    tg.sendData(JSON.stringify({
+                        action: 'user_connected',
+                        user_id: user.id
+                    }));
+                }
+            }
         }
 
-        // Показать уведомление
-        function showNotification(message, isError = false) {
-            const notification = document.getElementById('notification');
-            notification.textContent = message;
+        // Инициализация демо-пользователя
+        function initializeDemoUser() {
+            currentUser = {
+                id: 1050563984,
+                firstName: 'Демо',
+                lastName: 'Пользователь',
+                username: 'demo_user',
+                photoUrl: null,
+                isTelegram: false
+            };
             
-            if (isError) {
-                notification.classList.add('error');
+            updateUserDisplay();
+            showNotification('Демо-режим. Для полного функционала откройте в Telegram.');
+        }
+
+        // Обновление отображения пользователя
+        function updateUserDisplay() {
+            if (!currentUser) return;
+            
+            document.getElementById('userName').textContent = 
+                currentUser.firstName + (currentUser.lastName ? ' ' + currentUser.lastName : '');
+            
+            document.getElementById('userId').textContent = currentUser.id;
+            
+            // Обновляем аватар
+            const avatarEl = document.getElementById('userAvatar');
+            if (currentUser.photoUrl) {
+                avatarEl.innerHTML = `<img src="${currentUser.photoUrl}" alt="Avatar">`;
             } else {
-                notification.classList.remove('error');
+                avatarEl.innerHTML = `<i class="fas fa-user"></i>`;
             }
             
-            notification.classList.add('show');
+            // Статус
+            document.getElementById('userStatus').textContent = 
+                currentUser.isTelegram ? 'Подключен через Telegram' : 'Демо-режим';
+        }
+
+        // Загрузка настроек пользователя
+        async function loadUserSettings() {
+            if (!currentUser) return;
             
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 3000);
+            try {
+                const response = await fetch(`http://localhost:5000/api/user/${currentUser.id}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (data.status === 'success') {
+                        // Обновляем настройки
+                        const settings = data.settings;
+                        currentSettings.oiThreshold = settings.oi_threshold || 5;
+                        currentSettings.volumeThreshold = settings.volume_threshold || 20;
+                        currentSettings.period = settings.comparison_period || '1h';
+                        currentSettings.monitoring = settings.monitoring_active !== false;
+                        
+                        // Обновляем статистику
+                        if (data.user) {
+                            document.getElementById('signalsCount').textContent = 
+                                settings.total_signals || 0;
+                        }
+                        
+                        updateSettingsDisplay();
+                        showNotification('Настройки загружены', 'success');
+                        
+                    } else {
+                        // Пользователь не найден - создаем нового
+                        await createNewUser();
+                    }
+                } else {
+                    throw new Error('API недоступен');
+                }
+                
+            } catch (error) {
+                console.warn('Не удалось загрузить настройки:', error);
+                loadLocalSettings();
+            }
         }
 
-        // Открыть бота в Telegram
-        function openTelegramBot() {
-            window.open('https://t.me/neffue_bot', '_blank');
+        // Создание нового пользователя
+        async function createNewUser() {
+            showNotification('👋 Новый пользователь! Создаем настройки...');
+            
+            // Используем дефолтные настройки
+            updateSettingsDisplay();
+            
+            // Сохраняем локально
+            saveLocalSettings();
         }
 
-        // Функция для принудительной загрузки настроек
-        function reloadSettings() {
-            if (currentUserId) {
-                loadSettingsFromBot();
-            } else {
-                showNotification('Сначала войдите в систему', true);
+        // Загрузка локальных настроек
+        function loadLocalSettings() {
+            const saved = localStorage.getItem('oiBotSettings');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    Object.assign(currentSettings, parsed);
+                    updateSettingsDisplay();
+                } catch (e) {
+                    console.error('Ошибка загрузки локальных настроек:', e);
+                }
+            }
+        }
+
+        // Сохранение локальных настроек
+        function saveLocalSettings() {
+            localStorage.setItem('oiBotSettings', JSON.stringify(currentSettings));
+        }
+
+        // Обновление отображения настроек
+        function updateSettingsDisplay() {
+            // Пороги
+            document.getElementById('oiValue').textContent = currentSettings.oiThreshold + '%';
+            document.getElementById('volumeValue').textContent = currentSettings.volumeThreshold + '%';
+            
+            // Период
+            document.getElementById('periodValue').textContent = periods[currentSettings.period] || '1 час';
+            
+            // Слайдеры
+            document.querySelector('#oiSetting input[type="range"]').value = currentSettings.oiThreshold;
+            document.querySelector('#volumeSetting input[type="range"]').value = currentSettings.volumeThreshold;
+            document.getElementById('oiSliderValue').textContent = currentSettings.oiThreshold + '%';
+            document.getElementById('volumeSliderValue').textContent = currentSettings.volumeThreshold + '%';
+            
+            // Активные периоды
+            updateActivePeriods();
+            
+            // Сохраняем локально
+            saveLocalSettings();
+        }
+
+        // Обновление активных периодов
+        function updateActivePeriods() {
+            document.querySelectorAll('.period-option').forEach(option => {
+                option.classList.remove('active');
+                const period = option.getAttribute('onclick').match(/'([^']+)'/)[1];
+                if (period === currentSettings.period) {
+                    option.classList.add('active');
+                }
+            });
+        }
+
+        // Переключение настроек
+        function toggleSetting(settingId) {
+            const setting = document.getElementById(settingId);
+            const allSettings = document.querySelectorAll('.setting-control');
+            
+            allSettings.forEach(s => {
+                if (s.id !== settingId) {
+                    s.classList.remove('active');
+                }
+            });
+            
+            setting.classList.toggle('active');
+        }
+
+        // Обновление слайдеров
+        function updateSlider(type, value) {
+            if (type === 'oi') {
+                currentSettings.oiThreshold = parseInt(value);
+                document.getElementById('oiSliderValue').textContent = value + '%';
+            } else if (type === 'volume') {
+                currentSettings.volumeThreshold = parseInt(value);
+                document.getElementById('volumeSliderValue').textContent = value + '%';
+            }
+        }
+
+        // Выбор периода
+        function selectPeriod(period) {
+            currentSettings.period = period;
+            
+            // Обновляем активный класс
+            document.querySelectorAll('.period-option').forEach(option => {
+                option.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            updateSettingsDisplay();
+        }
+
+        // Применение настроек
+        async function applySettings() {
+            if (!currentUser) {
+                showNotification('Сначала загрузите данные пользователя', 'error');
+                return;
+            }
+            
+            try {
+                // Отправляем настройки на сервер
+                const response = await fetch(`http://localhost:5000/api/user/${currentUser.id}/settings`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        oi_threshold: currentSettings.oiThreshold,
+                        volume_threshold: currentSettings.volumeThreshold,
+                        comparison_period: currentSettings.period,
+                        pair_filter: currentSettings.filter,
+                        monitoring_active: currentSettings.monitoring
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showNotification('✅ Настройки успешно сохранены!', 'success');
+                    
+                    // Отправляем в Telegram если есть
+                    if (window.Telegram && Telegram.WebApp && Telegram.WebApp.sendData) {
+                        Telegram.WebApp.sendData(JSON.stringify({
+                            action: 'settings_updated',
+                            user_id: currentUser.id,
+                            settings: currentSettings
+                        }));
+                    }
+                    
+                } else {
+                    showNotification('❌ Ошибка сохранения: ' + result.message, 'error');
+                }
+                
+            } catch (error) {
+                console.error('Ошибка сохранения:', error);
+                showNotification('❌ Ошибка соединения с сервером', 'error');
+                
+                // Сохраняем локально
+                saveLocalSettings();
+            }
+            
+            // Закрываем все настройки
+            document.querySelectorAll('.setting-control').forEach(s => {
+                s.classList.remove('active');
+            });
+        }
+
+        // Загрузка данных пользователя
+        async function loadUserData() {
+            showNotification('🔄 Обновление данных...');
+            await loadUserSettings();
+            simulateBotData();
+        }
+
+        // Проверка связи
+        async function testConnection() {
+            try {
+                const response = await fetch('http://localhost:5000/api/health');
+                if (response.ok) {
+                    showNotification('✅ Связь с ботом установлена', 'success');
+                } else {
+                    showNotification('❌ Сервер недоступен', 'error');
+                }
+            } catch (error) {
+                showNotification('❌ Ошибка соединения', 'error');
             }
         }
 
         // Симуляция данных бота
         function simulateBotData() {
             const activePairs = Math.floor(Math.random() * 50) + 20;
-            const signals24h = Math.floor(Math.random() * 30) + 5;
-            
             document.getElementById('activePairs').textContent = activePairs;
-            document.getElementById('signals24h').textContent = signals24h;
-            updateTime();
+        }
+
+        // Запуск обновления данных
+        function startDataUpdates() {
+            // Первое обновление
+            simulateBotData();
+            
+            // Обновление каждые 30 секунд
+            setInterval(simulateBotData, 30000);
+            
+            // Обновление времени
+            setInterval(updateTime, 60000);
         }
 
         // Обновление времени
@@ -652,18 +1000,57 @@
                 hour: '2-digit', 
                 minute: '2-digit' 
             });
-            if (document.getElementById('lastUpdate')) {
-                document.getElementById('lastUpdate').textContent = `обновлено ${timeString}`;
+            if (document.getElementById('userStatus')) {
+                const status = document.getElementById('userStatus');
+                status.textContent = status.textContent.split(' • ')[0] + ' • ' + timeString;
             }
         }
 
-        // Дополнительно: добавь все недостающие функции из предыдущей версии
-        // (updateDisplay, toggleSlider, updateSliderValue, selectPeriod, selectFilter, 
-        // updateActiveClasses, toggleMonitoring и т.д.)
-        
-        // Здесь должен быть весь остальной JavaScript код из предыдущей версии
-        // который управляет слайдерами, кнопками, отображением настроек
-        
+        // Показать приложение
+        function showApp() {
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+        }
+
+        // Показать ошибку
+        function showError(message) {
+            document.getElementById('loader').innerHTML = `
+                <div style="color: var(--danger); font-size: 20px; margin-bottom: 10px;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div style="color: var(--dark); text-align: center;">
+                    <div style="font-weight: 600; margin-bottom: 10px;">Ошибка</div>
+                    <div style="font-size: 14px;">${message}</div>
+                    <button onclick="location.reload()" style="
+                        background: var(--primary);
+                        color: white;
+                        border: none;
+                        padding: 10px 20px;
+                        border-radius: 10px;
+                        margin-top: 20px;
+                        cursor: pointer;
+                    ">
+                        Повторить
+                    </button>
+                </div>
+            `;
+        }
+
+        // Показать уведомление
+        function showNotification(message, type = '') {
+            const notification = document.getElementById('notification');
+            const text = document.getElementById('notificationText');
+            
+            notification.className = 'notification';
+            if (type) notification.classList.add(type);
+            
+            text.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
     </script>
 </body>
 </html>
