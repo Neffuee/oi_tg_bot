@@ -1,300 +1,1046 @@
-import asyncio
-import os
-from binance import AsyncClient
-from binance.exceptions import BinanceAPIException
-from telegram import Bot, Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, ContextTypes, filters
-from datetime import datetime, timedelta
-from collections import defaultdict, deque
-from dotenv import load_dotenv
-import logging
-import json
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-import threading
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OI Monitor Bot - Панель управления</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-# Загружаем переменные окружения
-load_dotenv()
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-# Настройка логирования
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+        .container {
+            max-width: 480px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
 
-# Конфигурация из переменных окружения
-TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-BINANCE_API_KEY = os.getenv('BINANCE_API_KEY')
-BINANCE_API_SECRET = os.getenv('BINANCE_API_SECRET')
+        /* Шапка */
+        .header {
+            margin-bottom: 25px;
+        }
 
-# URL для Web App
-WEB_APP_URL = "https://neffuee.github.io/oi_tg_bot/"
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
 
-# Проверяем наличие обязательных переменных
-if not TELEGRAM_BOT_TOKEN:
-    raise ValueError("TELEGRAM_BOT_TOKEN не установлен в переменных окружения")
+        .avatar {
+            font-size: 50px;
+            color: #667eea;
+        }
 
-# Глобальные переменные
-active_pairs = set()
-monitoring_active = True
-bot_stats = {
-    'active_pairs': 0,
-    'signals_24h': 0,
-    'last_update': datetime.now().isoformat(),
-    'monitoring': True
-}
+        .user-details h1 {
+            font-size: 22px;
+            color: #333;
+            margin-bottom: 5px;
+        }
 
-# Настройки пользователей
-user_settings = defaultdict(lambda: {
-    'oi_threshold': 5.0,
-    'volume_threshold': 20.0,
-    'comparison_period': '1h',
-    'pair_filter': 'all',
-    'custom_pairs': [],
-    'monitoring_active': True
-})
+        .user-id {
+            color: #666;
+            font-size: 14px;
+            background: #f5f5f5;
+            padding: 3px 10px;
+            border-radius: 15px;
+            display: inline-block;
+        }
 
-# Flask API для веб-панели
-app = Flask(__name__)
-CORS(app)
+        /* Карточка статуса */
+        .status-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 20px;
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+        }
 
-@app.route('/api/bot-stats', methods=['GET'])
-def get_bot_stats_api():
-    """API для получения статистики бота"""
-    global bot_stats
-    bot_stats['active_pairs'] = len(active_pairs)
-    bot_stats['last_update'] = datetime.now().isoformat()
-    return jsonify(bot_stats)
+        .status-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+        }
 
-@app.route('/api/user/<int:user_id>', methods=['GET'])
-def get_user_settings_api(user_id):
-    """API для получения настроек пользователя"""
-    settings = user_settings.get(user_id, {})
-    return jsonify(settings)
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
 
-@app.route('/api/user/<int:user_id>/settings', methods=['POST'])
-def update_user_settings_api(user_id):
-    """API для обновления настроек пользователя"""
-    data = request.json
-    if not data:
-        return jsonify({'error': 'No data provided'}), 400
-    
-    # Обновляем настройки
-    for key, value in data.items():
-        if key in user_settings[user_id]:
-            user_settings[user_id][key] = value
-    
-    # Логируем изменение
-    logger.info(f"User {user_id} updated settings: {data}")
-    
-    return jsonify({'status': 'success', 'settings': user_settings[user_id]})
+        .card-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+        }
 
-@app.route('/api/toggle-monitoring', methods=['POST'])
-def toggle_monitoring_api():
-    """API для включения/выключения мониторинга"""
-    global monitoring_active
-    data = request.json
-    if not data or 'enabled' not in data:
-        return jsonify({'error': 'No enabled parameter'}), 400
-    
-    monitoring_active = data['enabled']
-    bot_stats['monitoring'] = monitoring_active
-    
-    logger.info(f"Monitoring {'enabled' if monitoring_active else 'disabled'} via API")
-    
-    return jsonify({'status': 'success', 'monitoring': monitoring_active})
+        .bot-status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
 
-def run_flask():
-    """Запуск Flask сервера"""
-    app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-# Telegram бот функции
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    
-    welcome_text = f"""
-🤖 Добро пожаловать в OI Monitor Bot!
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4ade80;
+            animation: pulse 2s infinite;
+        }
 
-👤 Пользователь: {update.effective_user.first_name}
-🆔 ID: {user_id}
+        .status-dot.offline {
+            background: #ef4444;
+        }
 
-✨ *Новая веб-панель управления!*
-Нажмите кнопку ниже для удобного управления настройками.
-"""
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
 
-    keyboard = [
-        [InlineKeyboardButton("📱 Открыть веб-панель", web_app=WebAppInfo(url=WEB_APP_URL))],
-        [InlineKeyboardButton("▶️ Старт мониторинга", callback_data='start_monitoring')],
-        [InlineKeyboardButton("⏹ Стоп мониторинга", callback_data='stop_monitoring')],
-        [InlineKeyboardButton("📊 Статистика", callback_data='show_stats')]
-    ]
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
 
-    await update.message.reply_text(
-        welcome_text,
-        reply_markup=InlineKeyboardMarkup(keyboard),
-        parse_mode='Markdown'
-    )
+        .stat-item {
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 15px;
+        }
 
-async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
+        .stat-item i {
+            font-size: 24px;
+            margin-bottom: 10px;
+            display: block;
+        }
 
-    user_id = query.from_user.id
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
 
-    if query.data == 'start_monitoring':
-        user_settings[user_id]['monitoring_active'] = True
-        await query.edit_message_text(
-            text="✅ Мониторинг включен!",
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("📱 Веб-панель", web_app=WebAppInfo(url=WEB_APP_URL))],
-                [InlineKeyboardButton("🔙 Назад", callback_data='back')]
-            ])
-        )
-        logger.info(f"User {user_id} started monitoring")
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.8;
+        }
 
-    elif query.data == 'stop_monitoring':
-        user_settings[user_id]['monitoring_active'] = False
-        await query.edit_message_text(
-            text="⏹ Мониторинг остановлен!",
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("📱 Веб-панель", web_app=WebAppInfo(url=WEB_APP_URL))],
-                [InlineKeyboardButton("🔙 Назад", callback_data='back')]
-            ])
-        )
-        logger.info(f"User {user_id} stopped monitoring")
+        /* Настройки */
+        .settings-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+        }
 
-    elif query.data == 'show_stats':
-        stats_text = f"""
-📊 *Статистика бота:*
+        .settings-section h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
 
-• Активных пар: {len(active_pairs)}
-• Мониторинг: {'✅ Включен' if monitoring_active else '❌ Выключен'}
-• Пользователей: {len(user_settings)}
+        .setting-item {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
 
-🕐 Последнее обновление: {datetime.now().strftime('%H:%M:%S')}
+        .setting-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
 
-🌐 Для детальной статистики используйте веб-панель!
-"""
-        
-        await query.edit_message_text(
-            text=stats_text,
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("📱 Открыть веб-панель", web_app=WebAppInfo(url=WEB_APP_URL))],
-                [InlineKeyboardButton("🔙 Назад", callback_data='back')]
-            ]),
-            parse_mode='Markdown'
-        )
+        .setting-info {
+            display: flex;
+            flex-direction: column;
+        }
 
-    elif query.data == 'back':
-        await start_with_update(query, context)
+        .setting-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
 
-async def start_with_update(query, context):
-    """Обновление сообщения с кнопками"""
-    keyboard = [
-        [InlineKeyboardButton("📱 Открыть веб-панель", web_app=WebAppInfo(url=WEB_APP_URL))],
-        [InlineKeyboardButton("▶️ Старт мониторинга", callback_data='start_monitoring')],
-        [InlineKeyboardButton("⏹ Стоп мониторинга", callback_data='stop_monitoring')],
-        [InlineKeyboardButton("📊 Статистика", callback_data='show_stats')]
-    ]
+        .setting-value {
+            font-size: 14px;
+            color: #667eea;
+            font-weight: bold;
+        }
 
-    await query.edit_message_text(
-        text="Главное меню:",
-        reply_markup=InlineKeyboardMarkup(keyboard)
-    )
+        .setting-edit {
+            color: #667eea;
+            font-size: 18px;
+        }
 
-async def webapp_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Команда для открытия веб-приложения"""
-    keyboard = [
-        [InlineKeyboardButton("📱 Открыть веб-панель", web_app=WebAppInfo(url=WEB_APP_URL))],
-        [InlineKeyboardButton("ℹ️ Помощь", callback_data='help')]
-    ]
-    
-    await update.message.reply_text(
-        "🌐 *Веб-панель управления OI Monitor Bot*\n\n"
-        "Нажмите кнопку ниже для открытия веб-панели с настройками:\n"
-        "• Настройка порогов OI и Volume\n"
-        "• Выбор периода сравнения\n"
-        "• Фильтрация пар\n"
-        "• Статистика в реальном времени\n"
-        "• Управление мониторингом",
-        reply_markup=InlineKeyboardMarkup(keyboard),
-        parse_mode='Markdown'
-    )
+        /* Слайдеры настроек */
+        .slider-container {
+            display: none;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
 
-async def monitoring_loop():
-    """Основной цикл мониторинга"""
-    logger.info("Запуск мониторинга...")
-    
-    while True:
-        try:
-            if monitoring_active and BINANCE_API_KEY and BINANCE_API_SECRET:
-                client = await AsyncClient.create(BINANCE_API_KEY, BINANCE_API_SECRET)
+        .slider-container.active {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .slider-value {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 20px;
+        }
+
+        .slider {
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: #e5e7eb;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: 3px solid white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .slider-options {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Период сравнения */
+        .period-options {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .period-option {
+            text-align: center;
+            padding: 15px 5px;
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid #f0f2f5;
+        }
+
+        .period-option:hover {
+            border-color: #667eea;
+        }
+
+        .period-option.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .period-option i {
+            font-size: 20px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        /* Фильтр пар */
+        .filter-options {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .filter-option {
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid #f0f2f5;
+            text-align: center;
+        }
+
+        .filter-option:hover {
+            border-color: #667eea;
+        }
+
+        .filter-option.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        /* Кастомные пары */
+        .custom-pairs-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            margin-top: 15px;
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .custom-pairs-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* Кнопки действий */
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .action-btn {
+            padding: 18px;
+            border: none;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .start-btn {
+            background: #667eea;
+            color: white;
+        }
+
+        .stop-btn {
+            background: #ef4444;
+            color: white;
+        }
+
+        .apply-btn {
+            background: #10b981;
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Управление ботом */
+        .bot-control {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .bot-control h3 {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .bot-control-btn {
+            width: 100%;
+            padding: 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .bot-control-btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        /* Уведомления */
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #10b981;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .notification.error {
+            background: #ef4444;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                padding: 15px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .period-options {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Анимации */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .container {
+            animation: fadeIn 0.5s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Шапка -->
+        <header class="header">
+            <div class="user-info">
+                <div class="avatar">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="user-details">
+                    <h1 class="username">OI Monitor Bot</h1>
+                    <p class="user-id">@neffue_bot</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Карточка статуса -->
+        <div class="status-card">
+            <div class="card-header">
+                <h2><i class="fas fa-chart-line"></i> СТАТУС БОТА</h2>
+            </div>
+            
+            <div class="bot-status">
+                <div class="status-indicator">
+                    <div class="status-dot" id="statusDot"></div>
+                    <span id="statusText">Мониторинг активен</span>
+                </div>
+                <div class="status-time" id="lastUpdate">
+                    обновлено сейчас
+                </div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <i class="fas fa-coins"></i>
+                    <div class="stat-value" id="activePairs">0</div>
+                    <div class="stat-label">Активных пар</div>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-bell"></i>
+                    <div class="stat-value" id="signals24h">0</div>
+                    <div class="stat-label">Сигналов за 24ч</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Настройки -->
+        <div class="settings-section">
+            <h3><i class="fas fa-cogs"></i> НАСТРОЙКИ БОТА</h3>
+            
+            <!-- Порог OI -->
+            <div class="setting-item" onclick="toggleSlider('oiSlider')">
+                <div class="setting-info">
+                    <div class="setting-name">Порог Open Interest</div>
+                    <div class="setting-value" id="oiValue">5%</div>
+                </div>
+                <div class="setting-edit">
+                    <i class="fas fa-edit"></i>
+                </div>
+            </div>
+            <div class="slider-container" id="oiSlider">
+                <div class="slider-header">
+                    <span>Порог OI:</span>
+                    <span class="slider-value" id="oiSliderValue">5%</span>
+                </div>
+                <input type="range" min="1" max="50" value="5" class="slider" id="oiRange" 
+                       oninput="updateSliderValue('oi', this.value)">
+                <div class="slider-options">
+                    <span>1%</span>
+                    <span>25%</span>
+                    <span>50%</span>
+                </div>
+            </div>
+
+            <!-- Порог Volume -->
+            <div class="setting-item" onclick="toggleSlider('volumeSlider')">
+                <div class="setting-info">
+                    <div class="setting-name">Порог Volume</div>
+                    <div class="setting-value" id="volumeValue">20%</div>
+                </div>
+                <div class="setting-edit">
+                    <i class="fas fa-edit"></i>
+                </div>
+            </div>
+            <div class="slider-container" id="volumeSlider">
+                <div class="slider-header">
+                    <span>Порог Volume:</span>
+                    <span class="slider-value" id="volumeSliderValue">20%</span>
+                </div>
+                <input type="range" min="10" max="200" value="20" class="slider" id="volumeRange" 
+                       oninput="updateSliderValue('volume', this.value)">
+                <div class="slider-options">
+                    <span>10%</span>
+                    <span>100%</span>
+                    <span>200%</span>
+                </div>
+            </div>
+
+            <!-- Период сравнения -->
+            <div class="setting-item" onclick="toggleSlider('periodSettings')">
+                <div class="setting-info">
+                    <div class="setting-name">Период сравнения</div>
+                    <div class="setting-value" id="periodValue">1 час</div>
+                </div>
+                <div class="setting-edit">
+                    <i class="fas fa-edit"></i>
+                </div>
+            </div>
+            <div class="slider-container" id="periodSettings">
+                <div class="slider-header">
+                    <span>Период:</span>
+                    <span class="slider-value" id="periodSelected">1 час</span>
+                </div>
+                <div class="period-options">
+                    <div class="period-option" onclick="selectPeriod('1m')">
+                        <i class="fas fa-clock"></i>
+                        <span>1 мин</span>
+                    </div>
+                    <div class="period-option" onclick="selectPeriod('5m')">
+                        <i class="fas fa-clock"></i>
+                        <span>5 мин</span>
+                    </div>
+                    <div class="period-option" onclick="selectPeriod('15m')">
+                        <i class="fas fa-clock"></i>
+                        <span>15 мин</span>
+                    </div>
+                    <div class="period-option" onclick="selectPeriod('30m')">
+                        <i class="fas fa-clock"></i>
+                        <span>30 мин</span>
+                    </div>
+                    <div class="period-option active" onclick="selectPeriod('1h')">
+                        <i class="fas fa-clock"></i>
+                        <span>1 час</span>
+                    </div>
+                    <div class="period-option" onclick="selectPeriod('2h')">
+                        <i class="fas fa-clock"></i>
+                        <span>2 часа</span>
+                    </div>
+                    <div class="period-option" onclick="selectPeriod('4h')">
+                        <i class="fas fa-clock"></i>
+                        <span>4 часа</span>
+                    </div>
+                    <div class="period-option" onclick="selectPeriod('1d')">
+                        <i class="fas fa-clock"></i>
+                        <span>1 день</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Фильтр пар -->
+            <div class="setting-item" onclick="toggleSlider('filterSettings')">
+                <div class="setting-info">
+                    <div class="setting-name">Фильтр пар</div>
+                    <div class="setting-value" id="filterValue">Все пары</div>
+                </div>
+                <div class="setting-edit">
+                    <i class="fas fa-edit"></i>
+                </div>
+            </div>
+            <div class="slider-container" id="filterSettings">
+                <div class="slider-header">
+                    <span>Фильтр:</span>
+                    <span class="slider-value" id="filterSelected">Все пары</span>
+                </div>
+                <div class="filter-options">
+                    <div class="filter-option active" onclick="selectFilter('all')">
+                        Все фьючерсные пары
+                    </div>
+                    <div class="filter-option" onclick="selectFilter('top50')">
+                        Топ-50 по объему
+                    </div>
+                    <div class="filter-option" onclick="selectFilter('custom')">
+                        Кастомные пары
+                    </div>
+                </div>
                 
-                try:
-                    # Получаем тикеры для статистики
-                    tickers = await client.futures_ticker()
-                    usdt_pairs = [t for t in tickers if t['symbol'].endswith('USDT')]
-                    active_pairs.clear()
-                    active_pairs.update([t['symbol'] for t in usdt_pairs])
-                    
-                    # Обновляем статистику
-                    bot_stats['active_pairs'] = len(active_pairs)
-                    bot_stats['last_update'] = datetime.now().isoformat()
-                    
-                    logger.info(f"Мониторинг: {len(active_pairs)} пар, время: {datetime.now().strftime('%H:%M:%S')}")
-                    
-                finally:
-                    await client.close_connection()
-            
-            await asyncio.sleep(60)  # Проверка каждую минуту
-            
-        except Exception as e:
-            logger.error(f"Ошибка в мониторинге: {e}")
-            await asyncio.sleep(30)
+                <!-- Поле для кастомных пар -->
+                <div id="customPairsContainer" style="display: none;">
+                    <textarea 
+                        class="custom-pairs-input" 
+                        id="customPairsInput" 
+                        placeholder="Введите пары через запятую:
+BTCUSDT, ETHUSDT, SOLUSDT, ADAUSDT"
+                    ></textarea>
+                    <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                        Пример: BTCUSDT, ETHUSDT, SOLUSDT
+                    </div>
+                </div>
+            </div>
+        </div>
 
-async def main():
-    """Основная функция"""
-    logger.info("Запуск OI Monitor Bot с веб-панелью...")
-    
-    # Запускаем Flask API в отдельном потоке
-    flask_thread = threading.Thread(target=run_flask, daemon=True)
-    flask_thread.start()
-    logger.info("Flask API запущен на порту 5000")
-    
-    # Создаем Telegram бота
-    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
-    
-    # Регистрируем обработчики
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("web", webapp_command))
-    application.add_handler(CallbackQueryHandler(button_handler))
-    
-    await application.initialize()
-    await application.start()
-    
-    # Запускаем мониторинг
-    monitor_task = asyncio.create_task(monitoring_loop())
-    
-    # Запускаем polling
-    await application.updater.start_polling()
-    logger.info("Бот запущен! Веб-панель доступна по команде /web")
-    
-    try:
-        while True:
-            await asyncio.sleep(1)
-    except KeyboardInterrupt:
-        logger.info("Остановка бота...")
-        monitor_task.cancel()
-        await application.updater.stop()
-        await application.stop()
-        await application.shutdown()
-        logger.info("Бот остановлен")
+        <!-- Кнопки управления -->
+        <div class="action-buttons">
+            <button class="action-btn start-btn" id="startBtn" onclick="toggleMonitoring(true)">
+                <i class="fas fa-play"></i> ЗАПУСТИТЬ МОНИТОРИНГ
+            </button>
+            <button class="action-btn stop-btn" id="stopBtn" onclick="toggleMonitoring(false)" style="display: none;">
+                <i class="fas fa-stop"></i> ОСТАНОВИТЬ МОНИТОРИНГ
+            </button>
+            <button class="action-btn apply-btn" onclick="applySettings()">
+                <i class="fas fa-check"></i> ПРИМЕНИТЬ НАСТРОЙКИ
+            </button>
+        </div>
 
-if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        logger.info("Бот остановлен пользователем")
-    except Exception as e:
-        logger.error(f"Критическая ошибка: {e}")
+        <!-- Управление ботом -->
+        <div class="bot-control">
+            <h3><i class="fas fa-terminal"></i> УПРАВЛЕНИЕ</h3>
+            <button class="bot-control-btn" onclick="openTelegramBot()">
+                <i class="fab fa-telegram"></i> Открыть в Telegram
+            </button>
+        </div>
+    </div>
+
+    <!-- Уведомление -->
+    <div class="notification" id="notification">
+        Настройки сохранены!
+    </div>
+
+    <script>
+        // Конфигурация
+        const BOT_CONFIG = {
+            username: 'neffue_bot',
+            botName: 'OI Monitor Bot',
+            apiUrl: 'https://ваш-api.com/bot-data' // Замени на реальный API если есть
+        };
+
+        // Текущие настройки
+        let currentSettings = {
+            monitoring: true,
+            oiThreshold: 5,
+            volumeThreshold: 20,
+            period: '1h',
+            filter: 'all',
+            customPairs: ''
+        };
+
+        // Периоды для отображения
+        const periods = {
+            '1m': '1 минута',
+            '5m': '5 минут',
+            '15m': '15 минут',
+            '30m': '30 минут',
+            '1h': '1 час',
+            '2h': '2 часа',
+            '4h': '4 часа',
+            '1d': '1 день'
+        };
+
+        // Фильтры для отображения
+        const filters = {
+            'all': 'Все пары',
+            'top50': 'Топ-50',
+            'custom': 'Кастомные'
+        };
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSettings();
+            updateDisplay();
+            simulateBotData();
+            
+            // Автообновление данных каждые 30 секунд
+            setInterval(simulateBotData, 30000);
+            
+            // Обновление времени
+            setInterval(updateTime, 60000);
+        });
+
+        // Загрузка настроек (можно заменить на API запрос)
+        function loadSettings() {
+            const saved = localStorage.getItem('oiBotSettings');
+            if (saved) {
+                currentSettings = JSON.parse(saved);
+            }
+        }
+
+        // Сохранение настроек
+        function saveSettings() {
+            localStorage.setItem('oiBotSettings', JSON.stringify(currentSettings));
+        }
+
+        // Обновление отображения
+        function updateDisplay() {
+            // Пороги
+            document.getElementById('oiValue').textContent = currentSettings.oiThreshold + '%';
+            document.getElementById('volumeValue').textContent = currentSettings.volumeThreshold + '%';
+            
+            // Период
+            document.getElementById('periodValue').textContent = periods[currentSettings.period];
+            document.getElementById('periodSelected').textContent = periods[currentSettings.period];
+            
+            // Фильтр
+            document.getElementById('filterValue').textContent = filters[currentSettings.filter];
+            document.getElementById('filterSelected').textContent = filters[currentSettings.filter];
+            
+            // Слайдеры
+            document.getElementById('oiRange').value = currentSettings.oiThreshold;
+            document.getElementById('volumeRange').value = currentSettings.volumeThreshold;
+            document.getElementById('oiSliderValue').textContent = currentSettings.oiThreshold + '%';
+            document.getElementById('volumeSliderValue').textContent = currentSettings.volumeThreshold + '%';
+            
+            // Статус мониторинга
+            updateMonitoringStatus();
+            
+            // Показ/скрытие поля для кастомных пар
+            const customContainer = document.getElementById('customPairsContainer');
+            const customInput = document.getElementById('customPairsInput');
+            
+            if (currentSettings.filter === 'custom') {
+                customContainer.style.display = 'block';
+                customInput.value = currentSettings.customPairs || '';
+            } else {
+                customContainer.style.display = 'none';
+            }
+            
+            // Обновление активных классов
+            updateActiveClasses();
+        }
+
+        // Обновление статуса мониторинга
+        function updateMonitoringStatus() {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            
+            if (currentSettings.monitoring) {
+                statusDot.classList.remove('offline');
+                statusText.textContent = 'Мониторинг активен';
+                startBtn.style.display = 'none';
+                stopBtn.style.display = 'flex';
+            } else {
+                statusDot.classList.add('offline');
+                statusText.textContent = 'Мониторинг остановлен';
+                startBtn.style.display = 'flex';
+                stopBtn.style.display = 'none';
+            }
+        }
+
+        // Переключение слайдеров
+        function toggleSlider(sliderId) {
+            const slider = document.getElementById(sliderId);
+            const allSliders = document.querySelectorAll('.slider-container');
+            
+            allSliders.forEach(s => {
+                if (s.id !== sliderId) {
+                    s.classList.remove('active');
+                }
+            });
+            
+            slider.classList.toggle('active');
+        }
+
+        // Обновление значений слайдеров
+        function updateSliderValue(type, value) {
+            if (type === 'oi') {
+                currentSettings.oiThreshold = parseInt(value);
+                document.getElementById('oiSliderValue').textContent = value + '%';
+            } else if (type === 'volume') {
+                currentSettings.volumeThreshold = parseInt(value);
+                document.getElementById('volumeSliderValue').textContent = value + '%';
+            }
+        }
+
+        // Выбор периода
+        function selectPeriod(periodKey) {
+            currentSettings.period = periodKey;
+            
+            // Обновление активного класса
+            document.querySelectorAll('.period-option').forEach(option => {
+                option.classList.remove('active');
+            });
+            event.target.closest('.period-option').classList.add('active');
+            
+            document.getElementById('periodSelected').textContent = periods[periodKey];
+        }
+
+        // Выбор фильтра
+        function selectFilter(filterKey) {
+            currentSettings.filter = filterKey;
+            
+            // Обновление активного класса
+            document.querySelectorAll('.filter-option').forEach(option => {
+                option.classList.remove('active');
+            });
+            event.target.closest('.filter-option').classList.add('active');
+            
+            document.getElementById('filterSelected').textContent = filters[filterKey];
+            
+            // Показ/скрытие поля для кастомных пар
+            const customContainer = document.getElementById('customPairsContainer');
+            if (filterKey === 'custom') {
+                customContainer.style.display = 'block';
+            } else {
+                customContainer.style.display = 'none';
+            }
+        }
+
+        // Обновление активных классов
+        function updateActiveClasses() {
+            // Периоды
+            document.querySelectorAll('.period-option').forEach(option => {
+                option.classList.remove('active');
+                const period = option.getAttribute('onclick').match(/'([^']+)'/)[1];
+                if (period === currentSettings.period) {
+                    option.classList.add('active');
+                }
+            });
+            
+            // Фильтры
+            document.querySelectorAll('.filter-option').forEach(option => {
+                option.classList.remove('active');
+                const filter = option.getAttribute('onclick').match(/'([^']+)'/)[1];
+                if (filter === currentSettings.filter) {
+                    option.classList.add('active');
+                }
+            });
+        }
+
+        // Включение/выключение мониторинга
+        function toggleMonitoring(enable) {
+            currentSettings.monitoring = enable;
+            
+            // Здесь можно отправить запрос к API бота
+            // fetch('/api/toggle-monitoring', {
+            //     method: 'POST',
+            //     body: JSON.stringify({ enabled: enable })
+            // });
+            
+            updateMonitoringStatus();
+            showNotification(enable ? 'Мониторинг запущен' : 'Мониторинг остановлен');
+        }
+
+        // Применение настроек
+        function applySettings() {
+            // Сохраняем кастомные пары
+            if (currentSettings.filter === 'custom') {
+                const customPairs = document.getElementById('customPairsInput').value;
+                currentSettings.customPairs = customPairs;
+            }
+            
+            // Сохраняем в localStorage
+            saveSettings();
+            
+            // Здесь можно отправить настройки на сервер
+            // fetch('/api/update-settings', {
+            //     method: 'POST',
+            //     body: JSON.stringify(currentSettings)
+            // });
+            
+            // Закрываем все слайдеры
+            document.querySelectorAll('.slider-container').forEach(s => {
+                s.classList.remove('active');
+            });
+            
+            // Обновляем отображение
+            updateDisplay();
+            
+            showNotification('Настройки успешно применены!');
+        }
+
+        // Симуляция данных бота (замени на реальные API запросы)
+        function simulateBotData() {
+            const activePairs = Math.floor(Math.random() * 50) + 20;
+            const signals24h = Math.floor(Math.random() * 30) + 5;
+            
+            document.getElementById('activePairs').textContent = activePairs;
+            document.getElementById('signals24h').textContent = signals24h;
+            
+            // Обновляем время
+            updateTime();
+        }
+
+        // Обновление времени
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('ru-RU', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            document.getElementById('lastUpdate').textContent = `обновлено ${timeString}`;
+        }
+
+        // Показать уведомление
+        function showNotification(message, isError = false) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            
+            if (isError) {
+                notification.classList.add('error');
+            } else {
+                notification.classList.remove('error');
+            }
+            
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Открыть бота в Telegram
+        function openTelegramBot() {
+            const botUrl = `https://t.me/${BOT_CONFIG.username}`;
+            
+            // Если открыто в Telegram Web App
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.openTelegramLink(botUrl);
+            } else {
+                // Проверяем, мобильное ли устройство
+                if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                    window.location.href = `tg://resolve?domain=${BOT_CONFIG.username}`;
+                } else {
+                    window.open(botUrl, '_blank');
+                }
+            }
+        }
+
+        // Telegram Web App интеграция
+        if (window.Telegram && window.Telegram.WebApp) {
+            // Расширяем на весь экран
+            Telegram.WebApp.expand();
+            
+            // Получаем данные пользователя из Telegram
+            const user = Telegram.WebApp.initDataUnsafe.user;
+            if (user) {
+                document.querySelector('.username').textContent = `${BOT_CONFIG.botName}`;
+                document.querySelector('.user-id').textContent = `@${BOT_CONFIG.username}`;
+            }
+            
+            // Меняем тему под цвет
+            Telegram.WebApp.setHeaderColor('#667eea');
+            Telegram.WebApp.setBackgroundColor('#667eea');
+            
+            // Получаем данные из Telegram
+            Telegram.WebApp.onEvent('themeChanged', updateTheme);
+            Telegram.WebApp.onEvent('viewportChanged', updateViewport);
+            
+            function updateTheme() {
+                const theme = Telegram.WebApp.colorScheme;
+                console.log('Theme:', theme);
+            }
+            
+            function updateViewport() {
+                console.log('Viewport changed');
+            }
+        }
+    </script>
+</body>
+</html>
