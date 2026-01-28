@@ -465,6 +465,32 @@
             background: #ef4444;
         }
 
+        /* Статус синхронизации */
+        .sync-status {
+            display: none;
+            background: #f0f9ff;
+            border: 2px solid #0ea5e9;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .sync-status.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        .sync-status.success {
+            background: #f0fdf4;
+            border-color: #10b981;
+        }
+
+        .sync-status.error {
+            background: #fef2f2;
+            border-color: #ef4444;
+        }
+
         /* Адаптивность */
         @media (max-width: 480px) {
             body {
@@ -505,7 +531,7 @@
                 </div>
                 <div class="user-details">
                     <h1 class="username">OI Monitor Bot</h1>
-                    <p class="user-id">@neffue_bot</p>
+                    <p class="user-id">ID: 1050563984</p>
                 </div>
             </div>
         </header>
@@ -538,6 +564,11 @@
                     <div class="stat-label">Сигналов за 24ч</div>
                 </div>
             </div>
+        </div>
+
+        <!-- Статус синхронизации -->
+        <div class="sync-status" id="syncStatus">
+            <div id="syncMessage"></div>
         </div>
 
         <!-- Настройки -->
@@ -704,6 +735,9 @@ BTCUSDT, ETHUSDT, SOLUSDT, ADAUSDT"
             <button class="bot-control-btn" onclick="openTelegramBot()">
                 <i class="fab fa-telegram"></i> Открыть в Telegram
             </button>
+            <div style="margin-top: 10px; font-size: 12px; color: #666;">
+                ID: 1050563984 | API: http://localhost:5000
+            </div>
         </div>
     </div>
 
@@ -717,7 +751,8 @@ BTCUSDT, ETHUSDT, SOLUSDT, ADAUSDT"
         const BOT_CONFIG = {
             username: 'neffue_bot',
             botName: 'OI Monitor Bot',
-            apiUrl: 'https://ваш-api.com/bot-data' // Замени на реальный API если есть
+            telegramId: 1050563984, // ТВОЙ TELEGRAM ID
+            apiUrl: 'http://localhost:5000'
         };
 
         // Текущие настройки
@@ -751,27 +786,88 @@ BTCUSDT, ETHUSDT, SOLUSDT, ADAUSDT"
 
         // Инициализация
         document.addEventListener('DOMContentLoaded', function() {
-            loadSettings();
+            // Загружаем настройки из бота при старте
+            loadSettingsFromBot();
+            
             updateDisplay();
             simulateBotData();
             
-            // Автообновление данных каждые 30 секунд
+            // Обновление данных каждые 30 секунд
             setInterval(simulateBotData, 30000);
             
             // Обновление времени
             setInterval(updateTime, 60000);
         });
 
-        // Загрузка настроек (можно заменить на API запрос)
-        function loadSettings() {
-            const saved = localStorage.getItem('oiBotSettings');
-            if (saved) {
-                currentSettings = JSON.parse(saved);
+        // Загрузка настроек из бота через API
+        async function loadSettingsFromBot() {
+            showSyncStatus('🔄 Загрузка настроек из бота...', 'loading');
+            
+            try {
+                const response = await fetch(`${BOT_CONFIG.apiUrl}/api/user/${BOT_CONFIG.telegramId}/settings`);
+                
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    const settings = result.settings;
+                    
+                    // Обновляем локальные настройки из бота
+                    currentSettings.oiThreshold = settings.oi_threshold || 5;
+                    currentSettings.volumeThreshold = settings.volume_threshold || 20;
+                    currentSettings.period = settings.comparison_period || '1h';
+                    currentSettings.filter = settings.pair_filter || 'all';
+                    currentSettings.monitoring = settings.monitoring_active !== false;
+                    
+                    if (settings.pair_filter === 'custom' && settings.custom_pairs) {
+                        currentSettings.customPairs = Array.isArray(settings.custom_pairs) 
+                            ? settings.custom_pairs.join(', ')
+                            : settings.custom_pairs;
+                    }
+                    
+                    // Обновляем интерфейс
+                    updateDisplay();
+                    
+                    showSyncStatus('✅ Настройки загружены из бота!', 'success');
+                    console.log('Настройки загружены из бота:', settings);
+                    
+                    // Скрываем статус через 3 секунды
+                    setTimeout(() => {
+                        hideSyncStatus();
+                    }, 3000);
+                    
+                } else {
+                    throw new Error(result.message || 'Неизвестная ошибка');
+                }
+                
+            } catch (error) {
+                console.error('Ошибка загрузки настроек:', error);
+                showSyncStatus('⚠️ Не удалось загрузить настройки. Используются локальные.', 'error');
+                
+                // Показываем локальные настройки
+                loadLocalSettings();
             }
         }
 
-        // Сохранение настроек
-        function saveSettings() {
+        // Загрузка локальных настроек
+        function loadLocalSettings() {
+            const saved = localStorage.getItem('oiBotSettings');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    currentSettings = { ...currentSettings, ...parsed };
+                    updateDisplay();
+                } catch (e) {
+                    console.error('Ошибка парсинга локальных настроек:', e);
+                }
+            }
+        }
+
+        // Сохранение локальных настроек
+        function saveLocalSettings() {
             localStorage.setItem('oiBotSettings', JSON.stringify(currentSettings));
         }
 
@@ -782,12 +878,12 @@ BTCUSDT, ETHUSDT, SOLUSDT, ADAUSDT"
             document.getElementById('volumeValue').textContent = currentSettings.volumeThreshold + '%';
             
             // Период
-            document.getElementById('periodValue').textContent = periods[currentSettings.period];
-            document.getElementById('periodSelected').textContent = periods[currentSettings.period];
+            document.getElementById('periodValue').textContent = periods[currentSettings.period] || '1 час';
+            document.getElementById('periodSelected').textContent = periods[currentSettings.period] || '1 час';
             
             // Фильтр
-            document.getElementById('filterValue').textContent = filters[currentSettings.filter];
-            document.getElementById('filterSelected').textContent = filters[currentSettings.filter];
+            document.getElementById('filterValue').textContent = filters[currentSettings.filter] || 'Все пары';
+            document.getElementById('filterSelected').textContent = filters[currentSettings.filter] || 'Все пары';
             
             // Слайдеры
             document.getElementById('oiRange').value = currentSettings.oiThreshold;
@@ -811,6 +907,9 @@ BTCUSDT, ETHUSDT, SOLUSDT, ADAUSDT"
             
             // Обновление активных классов
             updateActiveClasses();
+            
+            // Сохраняем локально
+            saveLocalSettings();
         }
 
         // Обновление статуса мониторинга
@@ -831,6 +930,30 @@ BTCUSDT, ETHUSDT, SOLUSDT, ADAUSDT"
                 startBtn.style.display = 'flex';
                 stopBtn.style.display = 'none';
             }
+        }
+
+        // Показать статус синхронизации
+        function showSyncStatus(message, type = 'loading') {
+            const syncStatus = document.getElementById('syncStatus');
+            const syncMessage = document.getElementById('syncMessage');
+            
+            syncStatus.className = 'sync-status show';
+            syncMessage.innerHTML = message;
+            
+            if (type === 'success') {
+                syncStatus.classList.add('success');
+                syncStatus.classList.remove('error');
+            } else if (type === 'error') {
+                syncStatus.classList.add('error');
+                syncStatus.classList.remove('success');
+            } else {
+                syncStatus.classList.remove('success', 'error');
+            }
+        }
+
+        function hideSyncStatus() {
+            const syncStatus = document.getElementById('syncStatus');
+            syncStatus.classList.remove('show');
         }
 
         // Переключение слайдеров
@@ -897,18 +1020,24 @@ BTCUSDT, ETHUSDT, SOLUSDT, ADAUSDT"
             // Периоды
             document.querySelectorAll('.period-option').forEach(option => {
                 option.classList.remove('active');
-                const period = option.getAttribute('onclick').match(/'([^']+)'/)[1];
-                if (period === currentSettings.period) {
-                    option.classList.add('active');
+                const onclick = option.getAttribute('onclick');
+                if (onclick) {
+                    const period = onclick.match(/'([^']+)'/)[1];
+                    if (period === currentSettings.period) {
+                        option.classList.add('active');
+                    }
                 }
             });
             
             // Фильтры
             document.querySelectorAll('.filter-option').forEach(option => {
                 option.classList.remove('active');
-                const filter = option.getAttribute('onclick').match(/'([^']+)'/)[1];
-                if (filter === currentSettings.filter) {
-                    option.classList.add('active');
+                const onclick = option.getAttribute('onclick');
+                if (onclick) {
+                    const filter = onclick.match(/'([^']+)'/)[1];
+                    if (filter === currentSettings.filter) {
+                        option.classList.add('active');
+                    }
                 }
             });
         }
@@ -916,46 +1045,100 @@ BTCUSDT, ETHUSDT, SOLUSDT, ADAUSDT"
         // Включение/выключение мониторинга
         function toggleMonitoring(enable) {
             currentSettings.monitoring = enable;
-            
-            // Здесь можно отправить запрос к API бота
-            // fetch('/api/toggle-monitoring', {
-            //     method: 'POST',
-            //     body: JSON.stringify({ enabled: enable })
-            // });
-            
             updateMonitoringStatus();
             showNotification(enable ? 'Мониторинг запущен' : 'Мониторинг остановлен');
         }
 
-        // Применение настроек
-        function applySettings() {
-            // Сохраняем кастомные пары
+        // Применение настроек - ОСНОВНАЯ ФУНКЦИЯ
+        async function applySettings() {
+            // 1. Обновляем кастомные пары
             if (currentSettings.filter === 'custom') {
                 const customPairs = document.getElementById('customPairsInput').value;
                 currentSettings.customPairs = customPairs;
             }
             
-            // Сохраняем в localStorage
-            saveSettings();
+            // 2. Сохраняем локально
+            saveLocalSettings();
             
-            // Здесь можно отправить настройки на сервер
-            // fetch('/api/update-settings', {
-            //     method: 'POST',
-            //     body: JSON.stringify(currentSettings)
-            // });
+            // 3. Показываем статус синхронизации
+            showSyncStatus('🔄 Отправляем настройки в бот...', 'loading');
             
-            // Закрываем все слайдеры
+            // 4. Подготавливаем данные для отправки
+            const settingsData = {
+                oi_threshold: currentSettings.oiThreshold,
+                volume_threshold: currentSettings.volumeThreshold,
+                comparison_period: currentSettings.period,
+                pair_filter: currentSettings.filter,
+                monitoring_active: currentSettings.monitoring
+            };
+            
+            // Добавляем кастомные пары если есть
+            if (currentSettings.filter === 'custom' && currentSettings.customPairs) {
+                settingsData.custom_pairs = currentSettings.customPairs;
+            }
+            
+            try {
+                // 5. Пробуем отправить через Telegram WebApp
+                if (window.Telegram && Telegram.WebApp) {
+                    // Отправляем через Telegram WebApp
+                    Telegram.WebApp.sendData(JSON.stringify({
+                        action: 'update_settings',
+                        settings: {
+                            oiThreshold: currentSettings.oiThreshold,
+                            volumeThreshold: currentSettings.volumeThreshold,
+                            period: currentSettings.period,
+                            filter: currentSettings.filter,
+                            customPairs: currentSettings.customPairs,
+                            monitoring: currentSettings.monitoring
+                        }
+                    }));
+                    
+                    showSyncStatus('✅ Настройки отправлены через Telegram!', 'success');
+                    showNotification('Настройки отправлены в бот!');
+                    
+                } else {
+                    // 6. Или отправляем через API
+                    const response = await fetch(`${BOT_CONFIG.apiUrl}/api/user/${BOT_CONFIG.telegramId}/update`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(settingsData)
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.status === 'success') {
+                        showSyncStatus('✅ Настройки успешно сохранены в боте!', 'success');
+                        showNotification('Настройки сохранены!');
+                        console.log('Настройки сохранены в боте:', result);
+                    } else {
+                        showSyncStatus('❌ Ошибка: ' + (result.message || 'Неизвестная ошибка'), 'error');
+                        showNotification('Ошибка сохранения', true);
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Ошибка отправки настроек:', error);
+                showSyncStatus('❌ Ошибка соединения с ботом', 'error');
+                showNotification('Ошибка соединения', true);
+            }
+            
+            // 7. Закрываем все слайдеры
             document.querySelectorAll('.slider-container').forEach(s => {
                 s.classList.remove('active');
             });
             
-            // Обновляем отображение
+            // 8. Обновляем отображение
             updateDisplay();
             
-            showNotification('Настройки успешно применены!');
+            // 9. Скрываем статус синхронизации через 3 секунды
+            setTimeout(() => {
+                hideSyncStatus();
+            }, 3000);
         }
 
-        // Симуляция данных бота (замени на реальные API запросы)
+        // Симуляция данных бота
         function simulateBotData() {
             const activePairs = Math.floor(Math.random() * 50) + 20;
             const signals24h = Math.floor(Math.random() * 30) + 5;
@@ -963,7 +1146,6 @@ BTCUSDT, ETHUSDT, SOLUSDT, ADAUSDT"
             document.getElementById('activePairs').textContent = activePairs;
             document.getElementById('signals24h').textContent = signals24h;
             
-            // Обновляем время
             updateTime();
         }
 
@@ -999,11 +1181,9 @@ BTCUSDT, ETHUSDT, SOLUSDT, ADAUSDT"
         function openTelegramBot() {
             const botUrl = `https://t.me/${BOT_CONFIG.username}`;
             
-            // Если открыто в Telegram Web App
             if (window.Telegram && window.Telegram.WebApp) {
                 window.Telegram.WebApp.openTelegramLink(botUrl);
             } else {
-                // Проверяем, мобильное ли устройство
                 if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
                     window.location.href = `tg://resolve?domain=${BOT_CONFIG.username}`;
                 } else {
@@ -1014,32 +1194,26 @@ BTCUSDT, ETHUSDT, SOLUSDT, ADAUSDT"
 
         // Telegram Web App интеграция
         if (window.Telegram && window.Telegram.WebApp) {
-            // Расширяем на весь экран
             Telegram.WebApp.expand();
             
-            // Получаем данные пользователя из Telegram
             const user = Telegram.WebApp.initDataUnsafe.user;
             if (user) {
-                document.querySelector('.username').textContent = `${BOT_CONFIG.botName}`;
-                document.querySelector('.user-id').textContent = `@${BOT_CONFIG.username}`;
+                // Можно использовать данные пользователя из Telegram
+                console.log('Telegram user:', user);
             }
             
-            // Меняем тему под цвет
             Telegram.WebApp.setHeaderColor('#667eea');
             Telegram.WebApp.setBackgroundColor('#667eea');
             
-            // Получаем данные из Telegram
-            Telegram.WebApp.onEvent('themeChanged', updateTheme);
-            Telegram.WebApp.onEvent('viewportChanged', updateViewport);
-            
-            function updateTheme() {
-                const theme = Telegram.WebApp.colorScheme;
-                console.log('Theme:', theme);
-            }
-            
-            function updateViewport() {
-                console.log('Viewport changed');
-            }
+            // Обработка ответа от бота
+            Telegram.WebApp.onEvent('messageSent', (data) => {
+                console.log('Message sent to bot:', data);
+            });
+        }
+
+        // Функция для принудительной загрузки настроек
+        function reloadSettings() {
+            loadSettingsFromBot();
         }
     </script>
 </body>
