@@ -3,1113 +3,282 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OI Monitor - Панель управления</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --primary: #4361ee;
-            --primary-dark: #3a56d4;
-            --secondary: #7209b7;
-            --success: #4cc9f0;
-            --danger: #f72585;
-            --warning: #f8961e;
-            --dark: #1a1a2e;
-            --light: #f8f9fa;
-            --gray: #6c757d;
-            --border-radius: 12px;
-            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            --transition: all 0.3s ease;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-            color: var(--dark);
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: var(--border-radius);
-            padding: 25px 30px;
-            margin-bottom: 25px;
-            box-shadow: var(--box-shadow);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-
-        .header-info h1 {
-            color: var(--dark);
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-
-        .header-info .subtitle {
-            color: var(--gray);
-            font-size: 14px;
-            font-weight: 400;
-        }
-
-        .user-badge {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            padding: 12px 20px;
-            border-radius: var(--border-radius);
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: var(--box-shadow);
-        }
-
-        .user-badge i {
-            font-size: 18px;
-        }
-
-        .dashboard {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 25px;
-            margin-bottom: 25px;
-        }
-
-        .card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: var(--border-radius);
-            padding: 25px;
-            box-shadow: var(--box-shadow);
-            transition: var(--transition);
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid rgba(0, 0, 0, 0.05);
-        }
-
-        .card-title {
-            font-size: 18px;
-            color: var(--dark);
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .card-title i {
-            color: var(--primary);
-            font-size: 20px;
-        }
-
-        .badge {
-            background: var(--primary);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .badge.success {
-            background: var(--success);
-        }
-
-        .badge.danger {
-            background: var(--danger);
-        }
-
-        .badge.warning {
-            background: var(--warning);
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--dark);
-            font-weight: 500;
-            font-size: 14px;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: var(--border-radius);
-            font-size: 16px;
-            transition: var(--transition);
-            background: white;
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
-        }
-
-        .range-slider-container {
-            position: relative;
-            padding: 10px 0;
-        }
-
-        .range-slider {
-            width: 100%;
-            height: 8px;
-            -webkit-appearance: none;
-            background: linear-gradient(to right, var(--primary), var(--secondary));
-            border-radius: 4px;
-            outline: none;
-        }
-
-        .range-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 24px;
-            height: 24px;
-            background: white;
-            border-radius: 50%;
-            cursor: pointer;
-            border: 3px solid var(--primary);
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-            transition: var(--transition);
-        }
-
-        .range-slider::-webkit-slider-thumb:hover {
-            transform: scale(1.1);
-        }
-
-        .range-value {
-            position: absolute;
-            top: -10px;
-            right: 0;
-            background: var(--primary);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 12px 24px;
-            border: none;
-            border-radius: var(--border-radius);
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            text-decoration: none;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: linear-gradient(135deg, var(--primary-dark), var(--secondary));
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(67, 97, 238, 0.2);
-        }
-
-        .btn-secondary {
-            background: var(--light);
-            color: var(--dark);
-            border: 2px solid #e0e0e0;
-        }
-
-        .btn-secondary:hover {
-            background: #e9ecef;
-            border-color: #d0d0d0;
-        }
-
-        .btn-success {
-            background: var(--success);
-            color: white;
-        }
-
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
-
-        .btn-full {
-            width: 100%;
-        }
-
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 30px;
-        }
-
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .toggle-slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: var(--transition);
-            border-radius: 34px;
-        }
-
-        .toggle-slider:before {
-            position: absolute;
-            content: "";
-            height: 22px;
-            width: 22px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: var(--transition);
-            border-radius: 50%;
-        }
-
-        input:checked + .toggle-slider {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-        }
-
-        input:checked + .toggle-slider:before {
-            transform: translateX(30px);
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .stat-card {
-            background: rgba(67, 97, 238, 0.1);
-            padding: 20px;
-            border-radius: var(--border-radius);
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 32px;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            font-size: 14px;
-            color: var(--gray);
-            font-weight: 500;
-        }
-
-        .signal-item {
-            background: rgba(248, 249, 250, 0.8);
-            padding: 15px;
-            border-radius: var(--border-radius);
-            margin-bottom: 10px;
-            border-left: 4px solid var(--primary);
-        }
-
-        .signal-symbol {
-            font-weight: 600;
-            color: var(--dark);
-            font-size: 16px;
-        }
-
-        .signal-values {
-            display: flex;
-            gap: 20px;
-            margin-top: 8px;
-        }
-
-        .signal-value {
-            font-size: 14px;
-            color: var(--gray);
-        }
-
-        .signal-value span {
-            font-weight: 600;
-            color: var(--dark);
-        }
-
-        .signal-time {
-            font-size: 12px;
-            color: var(--gray);
-            margin-top: 8px;
-        }
-
-        .loading {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 200px;
-        }
-
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid var(--primary);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 25px;
-            border-radius: var(--border-radius);
-            background: white;
-            box-shadow: var(--box-shadow);
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            transform: translateX(400px);
-            transition: transform 0.3s ease;
-            z-index: 1000;
-        }
-
-        .notification.show {
-            transform: translateX(0);
-        }
-
-        .notification.success {
-            border-left: 4px solid var(--success);
-        }
-
-        .notification.error {
-            border-left: 4px solid var(--danger);
-        }
-
-        .notification i {
-            font-size: 20px;
-        }
-
-        .notification.success i {
-            color: var(--success);
-        }
-
-        .notification.error i {
-            color: var(--danger);
-        }
-
-        .mobile-warning {
-            display: none;
-            background: var(--warning);
-            color: white;
-            padding: 15px;
-            border-radius: var(--border-radius);
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: 500;
-        }
-
-        @media (max-width: 768px) {
-            .dashboard {
-                grid-template-columns: 1fr;
-            }
-            
-            .header {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .mobile-warning {
-                display: block;
-            }
-        }
-
-        @media (max-width: 480px) {
-            body {
-                padding: 10px;
-            }
-            
-            .card {
-                padding: 20px;
-            }
-        }
-    </style>
+    <title>OI Monitor Control Panel</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <div class="mobile-warning">
-        <i class="fas fa-mobile-alt"></i> Для лучшего опыта используйте приложение Telegram на мобильном устройстве
-    </div>
-
     <div class="container">
-        <div class="header">
-            <div class="header-info">
-                <h1><i class="fas fa-chart-line"></i> OI Monitor Dashboard</h1>
-                <div class="subtitle">Управление настройками мониторинга в реальном времени</div>
+        <header class="header">
+            <div class="logo">
+                <h1>📊 OI Monitor</h1>
+                <p class="subtitle">Панель управления</p>
             </div>
-            <div class="user-badge">
-                <i class="fas fa-user"></i>
-                <span id="userName">Загрузка...</span>
-            </div>
-        </div>
-
-        <div class="dashboard">
-            <!-- Карточка статуса -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">
-                        <i class="fas fa-satellite-dish"></i>
-                        <span>Статус мониторинга</span>
-                    </div>
-                    <div class="toggle-switch">
-                        <input type="checkbox" id="monitoringToggle">
-                        <span class="toggle-slider"></span>
-                    </div>
-                </div>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-value" id="totalSignals">0</div>
-                        <div class="stat-label">Всего сигналов</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="activePairs">0</div>
-                        <div class="stat-label">Активных пар</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="successRate">0%</div>
-                        <div class="stat-label">Успешность</div>
-                    </div>
+            <div class="user-info">
+                <div class="user-id">ID: {{ user_id }}</div>
+                <div class="connection-status connected">
+                    <span class="status-dot"></span>
+                    Соединение установлено
                 </div>
             </div>
+        </header>
 
-            <!-- Карточка настроек OI -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">
-                        <i class="fas fa-chart-bar"></i>
-                        <span>Порог Open Interest</span>
-                    </div>
-                    <div class="badge" id="oiBadge">5%</div>
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="menu">
+                    <button class="menu-item active" data-tab="settings">
+                        ⚙️ Настройки
+                    </button>
+                    <button class="menu-item" data-tab="statistics">
+                        📊 Статистика
+                    </button>
+                    <button class="menu-item" data-tab="signals">
+                        🔔 Сигналы
+                    </button>
+                    <button class="menu-item" data-tab="help">
+                        ❓ Помощь
+                    </button>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Изменение OI для сигнала:</label>
-                    <div class="range-slider-container">
-                        <input type="range" min="1" max="50" value="5" class="range-slider" id="oiSlider">
-                        <div class="range-value" id="oiValue">5%</div>
-                    </div>
-                    <div class="form-control" id="oiCustom">
-                        <input type="number" min="0.1" max="100" step="0.1" value="5" id="oiInput">
-                        <span>%</span>
-                    </div>
-                </div>
-                <button class="btn btn-primary btn-full" onclick="saveOISettings()">
-                    <i class="fas fa-save"></i> Сохранить OI настройки
-                </button>
-            </div>
-
-            <!-- Карточка настроек Volume -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">
-                        <i class="fas fa-chart-area"></i>
-                        <span>Порог Volume</span>
-                    </div>
-                    <div class="badge" id="volumeBadge">20%</div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Изменение Volume для сигнала:</label>
-                    <div class="range-slider-container">
-                        <input type="range" min="10" max="200" value="20" class="range-slider" id="volumeSlider">
-                        <div class="range-value" id="volumeValue">20%</div>
-                    </div>
-                    <div class="form-control" id="volumeCustom">
-                        <input type="number" min="1" max="500" step="1" value="20" id="volumeInput">
-                        <span>%</span>
-                    </div>
-                </div>
-                <button class="btn btn-primary btn-full" onclick="saveVolumeSettings()">
-                    <i class="fas fa-save"></i> Сохранить Volume настройки
-                </button>
-            </div>
-
-            <!-- Карточка периода сравнения -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">
-                        <i class="fas fa-clock"></i>
-                        <span>Период сравнения</span>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Сравнивать с данными за:</label>
-                    <select class="form-control" id="periodSelect">
-                        <option value="1m">1 минуту назад</option>
-                        <option value="5m">5 минут назад</option>
-                        <option value="15m">15 минут назад</option>
-                        <option value="30m">30 минут назад</option>
-                        <option value="1h" selected>1 час назад</option>
-                        <option value="2h">2 часа назад</option>
-                        <option value="4h">4 часа назад</option>
-                        <option value="1d">1 день назад</option>
-                    </select>
-                </div>
-                <button class="btn btn-primary btn-full" onclick="savePeriodSettings()">
-                    <i class="fas fa-save"></i> Сохранить период
-                </button>
-            </div>
-
-            <!-- Карточка фильтра пар -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">
-                        <i class="fas fa-filter"></i>
-                        <span>Фильтр пар</span>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Какие пары отслеживать:</label>
-                    <select class="form-control" id="filterSelect">
-                        <option value="all">Все пары</option>
-                        <option value="top50">Топ-50 по объему</option>
-                        <option value="custom">Кастомные пары</option>
-                    </select>
-                </div>
-                <div class="form-group" id="customPairsContainer" style="display: none;">
-                    <label class="form-label">Список пар (через запятую):</label>
-                    <textarea class="form-control" id="customPairsInput" rows="3" placeholder="BTCUSDT, ETHUSDT, SOLUSDT"></textarea>
-                </div>
-                <button class="btn btn-primary btn-full" onclick="saveFilterSettings()">
-                    <i class="fas fa-save"></i> Сохранить фильтр
-                </button>
-            </div>
-
-            <!-- Карточка последних сигналов -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">
-                        <i class="fas fa-bell"></i>
-                        <span>Последние сигналы</span>
-                    </div>
-                    <div class="badge success" id="recentSignalsCount">0</div>
-                </div>
-                <div id="signalsList">
-                    <div class="loading">
-                        <div class="loader"></div>
-                    </div>
-                </div>
-                <button class="btn btn-secondary btn-full" onclick="loadMoreSignals()">
-                    <i class="fas fa-sync"></i> Загрузить еще
-                </button>
-            </div>
-        </div>
-
-        <div class="card" style="margin-top: 25px;">
-            <div class="card-header">
-                <div class="card-title">
-                    <i class="fas fa-cogs"></i>
-                    <span>Системные настройки</span>
-                </div>
-            </div>
-            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                <button class="btn btn-success" onclick="exportSettings()">
-                    <i class="fas fa-download"></i> Экспорт настроек
-                </button>
-                <button class="btn btn-secondary" onclick="importSettings()">
-                    <i class="fas fa-upload"></i> Импорт настроек
-                </button>
-                <button class="btn btn-danger" onclick="resetSettings()">
-                    <i class="fas fa-trash"></i> Сбросить настройки
-                </button>
-                <button class="btn btn-primary" onclick="refreshAll()">
-                    <i class="fas fa-sync"></i> Обновить все
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div id="notification" class="notification">
-        <i class="fas fa-check-circle"></i>
-        <span id="notificationMessage">Настройки сохранены!</span>
-    </div>
-
-    <script>
-        // Глобальные переменные
-        let currentSettings = {};
-        let signalLimit = 10;
-        let isLoading = false;
-
-        // Инициализация при загрузке страницы
-        document.addEventListener('DOMContentLoaded', async function() {
-            showNotification('Загрузка данных...', 'info');
-            await loadUserInfo();
-            await loadSettings();
-            await loadStatistics();
-            await loadRecentSignals();
-            setupEventListeners();
-            showNotification('Данные загружены', 'success');
-        });
-
-        // Загрузка информации о пользователе
-        async function loadUserInfo() {
-            try {
-                const response = await fetch('/api/me');
-                if (!response.ok) throw new Error('Ошибка загрузки данных пользователя');
                 
-                const userData = await response.json();
-                document.getElementById('userName').textContent = 
-                    userData.first_name || userData.username || `ID: ${userData.user_id}`;
-            } catch (error) {
-                console.error('Ошибка загрузки информации о пользователе:', error);
-                document.getElementById('userName').textContent = 'Ошибка загрузки';
-            }
-        }
+                <div class="status-card">
+                    <h3>Статус бота</h3>
+                    <div class="bot-status">
+                        <div class="status-indicator active">
+                            <span class="dot"></span>
+                            <span>Мониторинг активен</span>
+                        </div>
+                        <div class="last-update">
+                            Последнее обновление: <span id="last-update">--:--:--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-        // Загрузка настроек
-        async function loadSettings() {
-            try {
-                const response = await fetch('/api/settings');
-                if (!response.ok) throw new Error('Ошибка загрузки настроек');
-                
-                currentSettings = await response.json();
-                updateUIWithSettings();
-            } catch (error) {
-                console.error('Ошибка загрузки настроек:', error);
-                showNotification('Ошибка загрузки настроек', 'error');
-            }
-        }
-
-        // Обновление UI на основе настроек
-        function updateUIWithSettings() {
-            // Мониторинг
-            document.getElementById('monitoringToggle').checked = currentSettings.monitoring_active;
-            
-            // OI
-            document.getElementById('oiSlider').value = currentSettings.oi_threshold;
-            document.getElementById('oiInput').value = currentSettings.oi_threshold;
-            document.getElementById('oiValue').textContent = `${currentSettings.oi_threshold}%`;
-            document.getElementById('oiBadge').textContent = `${currentSettings.oi_threshold}%`;
-            
-            // Volume
-            document.getElementById('volumeSlider').value = currentSettings.volume_threshold;
-            document.getElementById('volumeInput').value = currentSettings.volume_threshold;
-            document.getElementById('volumeValue').textContent = `${currentSettings.volume_threshold}%`;
-            document.getElementById('volumeBadge').textContent = `${currentSettings.volume_threshold}%`;
-            
-            // Период
-            document.getElementById('periodSelect').value = currentSettings.comparison_period;
-            
-            // Фильтр
-            document.getElementById('filterSelect').value = currentSettings.pair_filter;
-            updateCustomPairsUI();
-            
-            // Кастомные пары
-            if (currentSettings.custom_pairs && Array.isArray(currentSettings.custom_pairs)) {
-                document.getElementById('customPairsInput').value = currentSettings.custom_pairs.join(', ');
-            }
-        }
-
-        // Обновление UI кастомных пар
-        function updateCustomPairsUI() {
-            const filter = document.getElementById('filterSelect').value;
-            const container = document.getElementById('customPairsContainer');
-            
-            if (filter === 'custom') {
-                container.style.display = 'block';
-            } else {
-                container.style.display = 'none';
-            }
-        }
-
-        // Загрузка статистики
-        async function loadStatistics() {
-            try {
-                const response = await fetch('/api/statistics?hours=24');
-                if (!response.ok) throw new Error('Ошибка загрузки статистики');
-                
-                const stats = await response.json();
-                updateStatisticsUI(stats);
-            } catch (error) {
-                console.error('Ошибка загрузки статистики:', error);
-            }
-        }
-
-        // Обновление UI статистики
-        function updateStatisticsUI(stats) {
-            document.getElementById('totalSignals').textContent = stats.total_signals || 0;
-            document.getElementById('activePairs').textContent = stats.unique_pairs || 0;
-            
-            // Расчет "успешности" (просто пример)
-            const successRate = stats.total_signals > 0 ? 
-                Math.min(95, Math.floor(Math.random() * 20) + 80) : 0;
-            document.getElementById('successRate').textContent = `${successRate}%`;
-        }
-
-        // Загрузка последних сигналов
-        async function loadRecentSignals() {
-            if (isLoading) return;
-            isLoading = true;
-            
-            try {
-                const response = await fetch(`/api/signals?limit=${signalLimit}`);
-                if (!response.ok) throw new Error('Ошибка загрузки сигналов');
-                
-                const signals = await response.json();
-                updateSignalsUI(signals);
-            } catch (error) {
-                console.error('Ошибка загрузки сигналов:', error);
-                showNotification('Ошибка загрузки сигналов', 'error');
-            } finally {
-                isLoading = false;
-            }
-        }
-
-        // Обновление UI сигналов
-        function updateSignalsUI(signals) {
-            const container = document.getElementById('signalsList');
-            const countBadge = document.getElementById('recentSignalsCount');
-            
-            if (!signals || signals.length === 0) {
-                container.innerHTML = '<div class="signal-item">Нет сигналов за последние 24 часа</div>';
-                countBadge.textContent = '0';
-                return;
-            }
-            
-            countBadge.textContent = signals.length;
-            
-            let html = '';
-            signals.forEach(signal => {
-                const time = new Date(signal.timestamp).toLocaleTimeString('ru-RU', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-                
-                const oiChange = signal.oi_change ? signal.oi_change.toFixed(2) : '0.00';
-                const volChange = signal.volume_change ? signal.volume_change.toFixed(2) : '0.00';
-                const oiClass = signal.oi_change > 0 ? 'success' : 'danger';
-                const volClass = signal.volume_change > 0 ? 'success' : 'danger';
-                
-                html += `
-                    <div class="signal-item">
-                        <div class="signal-symbol">${signal.symbol}</div>
-                        <div class="signal-values">
-                            <div class="signal-value">
-                                OI: <span class="${oiClass}">${oiChange}%</span>
+            <div class="content-area">
+                <!-- Вкладка настроек -->
+                <div class="tab-content active" id="settings-tab">
+                    <h2>⚙️ Настройки параметров</h2>
+                    
+                    <div class="settings-grid">
+                        <div class="setting-card">
+                            <h3>🎯 Порог Open Interest</h3>
+                            <div class="slider-container">
+                                <input type="range" id="oi-slider" min="1" max="30" step="0.5" 
+                                       value="{{ settings.oi_threshold }}">
+                                <div class="slider-value">
+                                    <span id="oi-value">{{ settings.oi_threshold }}</span>%
+                                </div>
                             </div>
-                            <div class="signal-value">
-                                Volume: <span class="${volClass}">${volChange}%</span>
+                            <p class="hint">При каком изменении OI отправлять сигнал</p>
+                        </div>
+
+                        <div class="setting-card">
+                            <h3>📊 Порог Volume</h3>
+                            <div class="slider-container">
+                                <input type="range" id="volume-slider" min="10" max="200" step="5" 
+                                       value="{{ settings.volume_threshold }}">
+                                <div class="slider-value">
+                                    <span id="volume-value">{{ settings.volume_threshold }}</span>%
+                                </div>
+                            </div>
+                            <p class="hint">При каком изменении объема отправлять сигнал</p>
+                        </div>
+
+                        <div class="setting-card">
+                            <h3>⏰ Период сравнения</h3>
+                            <select id="period-select" class="select-box">
+                                {% for key, name in periods.items() %}
+                                <option value="{{ key }}" 
+                                        {% if settings.comparison_period == key %}selected{% endif %}>
+                                    {{ name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <p class="hint">За какой период считать изменения</p>
+                        </div>
+
+                        <div class="setting-card">
+                            <h3>🔍 Фильтр пар</h3>
+                            <div class="radio-group">
+                                <label class="radio-label">
+                                    <input type="radio" name="pair-filter" value="all" 
+                                           {% if settings.pair_filter == 'all' %}checked{% endif %}>
+                                    <span>Все пары</span>
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="pair-filter" value="top50"
+                                           {% if settings.pair_filter == 'top50' %}checked{% endif %}>
+                                    <span>Топ-50 по объему</span>
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="pair-filter" value="custom"
+                                           {% if settings.pair_filter == 'custom' %}checked{% endif %}>
+                                    <span>Кастомные пары</span>
+                                </label>
+                            </div>
+                            
+                            <div id="custom-pairs-input" class="custom-pairs" 
+                                 style="display: {% if settings.pair_filter == 'custom' %}block{% else %}none{% endif %};">
+                                <input type="text" 
+                                       value="{{ settings.custom_pairs|join(', ') }}"
+                                       placeholder="BTCUSDT, ETHUSDT, SOLUSDT">
+                                <p class="hint">Укажите пары через запятую</p>
                             </div>
                         </div>
-                        <div class="signal-time">${time} • ${signal.period || '1h'}</div>
                     </div>
-                `;
-            });
-            
-            container.innerHTML = html;
-        }
 
-        // Настройка обработчиков событий
-        function setupEventListeners() {
-            // Слайдеры
-            document.getElementById('oiSlider').addEventListener('input', function(e) {
-                const value = e.target.value;
-                document.getElementById('oiValue').textContent = `${value}%`;
-                document.getElementById('oiInput').value = value;
-                document.getElementById('oiBadge').textContent = `${value}%`;
-            });
-            
-            document.getElementById('volumeSlider').addEventListener('input', function(e) {
-                const value = e.target.value;
-                document.getElementById('volumeValue').textContent = `${value}%`;
-                document.getElementById('volumeInput').value = value;
-                document.getElementById('volumeBadge').textContent = `${value}%`;
-            });
-            
-            // Прямой ввод
-            document.getElementById('oiInput').addEventListener('input', function(e) {
-                const value = Math.min(100, Math.max(0.1, parseFloat(e.target.value) || 5));
-                document.getElementById('oiSlider').value = value;
-                document.getElementById('oiValue').textContent = `${value}%`;
-                document.getElementById('oiBadge').textContent = `${value}%`;
-            });
-            
-            document.getElementById('volumeInput').addEventListener('input', function(e) {
-                const value = Math.min(500, Math.max(1, parseFloat(e.target.value) || 20));
-                document.getElementById('volumeSlider').value = value;
-                document.getElementById('volumeValue').textContent = `${value}%`;
-                document.getElementById('volumeBadge').textContent = `${value}%`;
-            });
-            
-            // Переключатель мониторинга
-            document.getElementById('monitoringToggle').addEventListener('change', async function(e) {
-                await saveSetting('monitoring_active', e.target.checked);
-            });
-            
-            // Фильтр пар
-            document.getElementById('filterSelect').addEventListener('change', updateCustomPairsUI);
-        }
+                    <div class="monitoring-control">
+                        <h3>📈 Управление мониторингом</h3>
+                        <div class="toggle-container">
+                            <label class="toggle-label">
+                                Мониторинг активен
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="monitoring-toggle" 
+                                           {% if settings.monitoring_active %}checked{% endif %}>
+                                    <span class="slider"></span>
+                                </label>
+                            </label>
+                        </div>
+                    </div>
 
-        // Сохранение настройки OI
-        async function saveOISettings() {
-            const value = parseFloat(document.getElementById('oiInput').value);
-            if (isNaN(value) || value < 0.1 || value > 100) {
-                showNotification('Некорректное значение OI (допустимо 0.1-100%)', 'error');
-                return;
-            }
-            
-            await saveSetting('oi_threshold', value);
-        }
+                    <button id="save-settings" class="save-btn">
+                        💾 Сохранить все настройки
+                    </button>
+                </div>
 
-        // Сохранение настройки Volume
-        async function saveVolumeSettings() {
-            const value = parseFloat(document.getElementById('volumeInput').value);
-            if (isNaN(value) || value < 1 || value > 500) {
-                showNotification('Некорректное значение Volume (допустимо 1-500%)', 'error');
-                return;
-            }
-            
-            await saveSetting('volume_threshold', value);
-        }
-
-        // Сохранение настройки периода
-        async function savePeriodSettings() {
-            const value = document.getElementById('periodSelect').value;
-            await saveSetting('comparison_period', value);
-        }
-
-        // Сохранение настройки фильтра
-        async function saveFilterSettings() {
-            const filter = document.getElementById('filterSelect').value;
-            const updates = { pair_filter: filter };
-            
-            if (filter === 'custom') {
-                const pairsText = document.getElementById('customPairsInput').value;
-                const pairs = pairsText.split(',')
-                    .map(p => p.trim().toUpperCase())
-                    .filter(p => p.length > 0);
-                
-                if (pairs.length === 0) {
-                    showNotification('Укажите хотя бы одну пару для кастомного фильтра', 'error');
-                    return;
-                }
-                
-                updates.custom_pairs = pairs;
-            }
-            
-            await saveSettings(updates);
-        }
-
-        // Сохранение одной настройки
-        async function saveSetting(key, value) {
-            const updates = { [key]: value };
-            await saveSettings(updates);
-        }
-
-        // Сохранение нескольких настроек
-        async function saveSettings(updates) {
-            try {
-                const response = await fetch('/api/settings', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(updates)
-                });
-                
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || 'Ошибка сохранения');
-                }
-                
-                // Обновляем текущие настройки
-                Object.assign(currentSettings, updates);
-                
-                showNotification('Настройки сохранены успешно', 'success');
-                
-                // Перезагружаем статистику
-                await loadStatistics();
-                
-            } catch (error) {
-                console.error('Ошибка сохранения настроек:', error);
-                showNotification(error.message, 'error');
-            }
-        }
-
-        // Экспорт настроек
-        async function exportSettings() {
-            const dataStr = JSON.stringify(currentSettings, null, 2);
-            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-            
-            const exportFileDefaultName = `oi-monitor-settings-${Date.now()}.json`;
-            
-            const linkElement = document.createElement('a');
-            linkElement.setAttribute('href', dataUri);
-            linkElement.setAttribute('download', exportFileDefaultName);
-            linkElement.click();
-            
-            showNotification('Настройки экспортированы', 'success');
-        }
-
-        // Импорт настроек
-        function importSettings() {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.json';
-            
-            input.onchange = async function(e) {
-                const file = e.target.files[0];
-                if (!file) return;
-                
-                try {
-                    const text = await file.text();
-                    const settings = JSON.parse(text);
+                <!-- Вкладка статистики -->
+                <div class="tab-content" id="statistics-tab">
+                    <h2>📊 Статистика</h2>
                     
-                    // Валидация импортированных настроек
-                    const validKeys = [
-                        'monitoring_active', 'oi_threshold', 'volume_threshold',
-                        'comparison_period', 'pair_filter', 'custom_pairs'
-                    ];
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">🔢</div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="total-signals">{{ statistics.total_signals }}</div>
+                                <div class="stat-label">Всего сигналов</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon">📈</div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="today-signals">{{ statistics.today_signals }}</div>
+                                <div class="stat-label">Сигналов сегодня</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon">⏰</div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="last-signal">{{ statistics.last_signal or 'Нет' }}</div>
+                                <div class="stat-label">Последний сигнал</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon">📊</div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="active-pairs">15</div>
+                                <div class="stat-label">Активных пар</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <h3>📈 Активность по часам</h3>
+                        <div class="chart-placeholder" id="hourly-chart">
+                            <!-- График загрузится через JavaScript -->
+                            <div class="loading">Загрузка графика...</div>
+                        </div>
+                    </div>
+
+                    <div class="top-pairs">
+                        <h3>🏆 Топ-5 активных пар</h3>
+                        <div class="pairs-list" id="top-pairs-list">
+                            <!-- Список загрузится через JavaScript -->
+                        </div>
+                    </div>
+
+                    <button id="refresh-stats" class="refresh-btn">
+                        🔄 Обновить статистику
+                    </button>
+                </div>
+
+                <!-- Вкладка сигналов -->
+                <div class="tab-content" id="signals-tab">
+                    <h2>🔔 Последние сигналы</h2>
                     
-                    const updates = {};
-                    for (const key of validKeys) {
-                        if (key in settings) {
-                            updates[key] = settings[key];
-                        }
-                    }
+                    <div class="signals-list" id="signals-container">
+                        <div class="no-signals">
+                            <div class="no-signals-icon">📭</div>
+                            <h3>Сигналов пока нет</h3>
+                            <p>Как только сработают ваши настройки, здесь появятся сигналы</p>
+                            <button id="simulate-signal" class="test-btn">
+                                📡 Протестировать сигнал
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Вкладка помощи -->
+                <div class="tab-content" id="help-tab">
+                    <h2>❓ Помощь и инструкции</h2>
                     
-                    await saveSettings(updates);
-                    showNotification('Настройки импортированы', 'success');
-                    
-                } catch (error) {
-                    console.error('Ошибка импорта:', error);
-                    showNotification('Ошибка импорта настроек', 'error');
-                }
-            };
-            
-            input.click();
-        }
+                    <div class="help-content">
+                        <div class="help-section">
+                            <h3>🎯 Что такое Open Interest (OI)?</h3>
+                            <p>Open Interest (открытый интерес) - это общее количество открытых фьючерсных контрактов на рынке. Рост OI обычно указывает на приток новых денег, а снижение - на закрытие позиций.</p>
+                        </div>
 
-        // Сброс настроек
-        async function resetSettings() {
-            if (!confirm('Вы уверены, что хотите сбросить все настройки к значениям по умолчанию?')) {
-                return;
-            }
-            
-            try {
-                const defaultSettings = {
-                    monitoring_active: true,
-                    oi_threshold: 5.0,
-                    volume_threshold: 20.0,
-                    comparison_period: '1h',
-                    pair_filter: 'all',
-                    custom_pairs: []
-                };
-                
-                await saveSettings(defaultSettings);
-                showNotification('Настройки сброшены', 'success');
-                
-            } catch (error) {
-                console.error('Ошибка сброса настроек:', error);
-                showNotification('Ошибка сброса настроек', 'error');
-            }
-        }
+                        <div class="help-section">
+                            <h3>📊 Как настроить пороги?</h3>
+                            <p>• <b>OI порог 5-10%</b> - для скальпинга и внутридневной торговли<br>
+                               • <b>OI порог 10-20%</b> - для среднесрочных позиций<br>
+                               • <b>Volume порог 20-50%</b> - стандартные значения<br>
+                               • <b>Volume порог 50-100%</b> - для сильных движений</p>
+                        </div>
 
-        // Загрузка больше сигналов
-        function loadMoreSignals() {
-            signalLimit += 10;
-            loadRecentSignals();
-        }
+                        <div class="help-section">
+                            <h3>⏰ Как выбрать период?</h3>
+                            <p>• <b>Короткие (1-30 мин)</b> - для скальперов<br>
+                               • <b>Средние (1-4 часа)</b> - для дневных трейдеров<br>
+                               • <b>Длинные (1 день)</b> - для позиционных трейдеров</p>
+                        </div>
 
-        // Обновление всех данных
-        async function refreshAll() {
-            showNotification('Обновление данных...', 'info');
-            await Promise.all([
-                loadSettings(),
-                loadStatistics(),
-                loadRecentSignals()
-            ]);
-            showNotification('Данные обновлены', 'success');
-        }
+                        <div class="help-section">
+                            <h3>📱 Как использовать бота?</h3>
+                            <p>1. Настройте пороги срабатывания<br>
+                               2. Выберите период сравнения<br>
+                               3. Укажите интересующие вас пары<br>
+                               4. Включите мониторинг<br>
+                               5. Получайте сигналы в Telegram</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        // Показать уведомление
-        function showNotification(message, type = 'success') {
-            const notification = document.getElementById('notification');
-            const messageElement = document.getElementById('notificationMessage');
-            const icon = notification.querySelector('i');
-            
-            messageElement.textContent = message;
-            
-            // Устанавливаем классы в зависимости от типа
-            notification.className = 'notification';
-            if (type === 'success') {
-                notification.classList.add('success');
-                icon.className = 'fas fa-check-circle';
-            } else if (type === 'error') {
-                notification.classList.add('error');
-                icon.className = 'fas fa-exclamation-circle';
-            } else {
-                icon.className = 'fas fa-info-circle';
-            }
-            
-            // Показываем уведомление
-            notification.classList.add('show');
-            
-            // Автоматически скрываем через 5 секунд
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 5000);
-        }
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-left">
+                    <p>OI Monitor Bot v2.0 • Работает в реальном времени</p>
+                </div>
+                <div class="footer-right">
+                    <button id="send-to-telegram" class="telegram-btn">
+                        📤 Отправить в Telegram
+                    </button>
+                </div>
+            </div>
+        </footer>
+    </div>
 
-        // Обработка ошибок
-        window.addEventListener('error', function(e) {
-            console.error('Global error:', e.error);
-            showNotification('Произошла ошибка в приложении', 'error');
-        });
+    <!-- Модальное окно уведомления -->
+    <div id="notification" class="notification">
+        <div class="notification-content">
+            <span class="notification-icon">✅</span>
+            <span class="notification-text"></span>
+        </div>
+    </div>
 
-        // Обработка необработанных промисов
-        window.addEventListener('unhandledrejection', function(e) {
-            console.error('Unhandled promise rejection:', e.reason);
-            showNotification('Ошибка выполнения операции', 'error');
-        });
-    </script>
+    <script src="/static/script.js"></script>
 </body>
 </html>
